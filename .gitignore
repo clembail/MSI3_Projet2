@@ -1,9 +1,0 @@
-# ignore build and install directories
-build
-install
-
-#ignore PoissonCuda 
-PoissonCuda
-
-#ignore .DS_Store
-.DS_Store
