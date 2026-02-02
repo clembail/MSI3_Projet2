@@ -1,4 +1,6 @@
-void setDims(const int *n, 
-             const double *xmin, 
-             const double *dx, 
+#pragma once
+
+void setDims(const int *n,
+             const double *xmin,
+             const double *dx,
              const double *lambda);
