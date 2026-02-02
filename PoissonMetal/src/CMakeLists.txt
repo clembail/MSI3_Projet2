@@ -18,7 +18,6 @@ include_directories(
   common
   metal
   metal-cpp
-  shaders
   ${CMAKE_BINARY_DIR}
   )
 
