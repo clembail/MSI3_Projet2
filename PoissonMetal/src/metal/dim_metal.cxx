@@ -1,30 +1,38 @@
 #include "dim.hxx"
+#include "SharedStructs.h"
 #include "timer.hxx"
-#include "Metal/Metal.hpp"
 
-constant int d_n[3];
-constant double d_xmin[3];
-constant double d_dx[3];
-constant double d_lambda[3];
+static constants _hostConstants;
 
-kernel void symbol()
-{
-  printf("symbol : dx = %f %f %f\n", d_dx[0], d_dx[1], d_dx[2]);
-  printf("symbol : n  = %d %d %d\n", d_n[0], d_n[1], d_n[2]);
-}
+// void symbol()
+// {
+//   printf("symbol : dx = %f %f %f\n",
+//     _hostConstants.d_dx[0],
+//     _hostConstants.d_dx[1],
+//     _hostConstants.d_dx[2]);
+//   printf("symbol : n  = %d %d %d\n",
+//     _hostConstants.d_n[0],
+//     _hostConstants.d_n[1],
+//     _hostConstants.d_n[2]);
+// }
 
-kernel void setDims(const int *h_n,
+void setDims(const int *h_n,
              const double *h_xmin,
              const double *h_dx,
              const double *h_lambda)
 {
-    Timer & T = GetTimer(5); T.start();
-    CUDA_CHECK_OP(cudaMemcpyToSymbol(d_n, h_n, 3 * sizeof(int)));
-    CUDA_CHECK_OP(cudaMemcpyToSymbol(d_xmin, h_xmin, 3 * sizeof(double)));
-    CUDA_CHECK_OP(cudaMemcpyToSymbol(d_dx, h_dx, 3 * sizeof(double)));
-    CUDA_CHECK_OP(cudaMemcpyToSymbol(d_lambda, h_lambda, 3 * sizeof(double)));
-    cudaDeviceSynchronize();
-    T.stop();
+  // Timer & T = GetTimer(5); T.start();
+  for (int i = 0; i < 3; i++){
+    _hostConstants.d_n[i] = h_n[i];
+    _hostConstants.d_xmin[i] = h_xmin[i];
+    _hostConstants.d_dx[i] = h_dx[i];
+    _hostConstants.d_lambda[i] = h_lambda[i];
+  }
+  // T.stop();
 
-//    symbol<<<1,1>>>();
+  // symbol<<<1,1>>>();
+}
+
+constants& getConstants(){
+  return _hostConstants;
 }
