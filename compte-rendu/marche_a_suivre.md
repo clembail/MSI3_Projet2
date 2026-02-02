@@ -17,42 +17,9 @@ Je divise cela en trois catégories : **L'Infrastructure**, **Le Code GPU** (ce 
 
 
 
-#### `src/metal/Context.hpp` (et `.cpp`)
-
-* **Rôle :** Singleton de gestion du GPU (remplace l'initialisation implicite de CUDA).
-* **Contenu :**
-* Une classe qui s'initialise une seule fois.
-* Elle demande au système le GPU par défaut (`MTLCreateSystemDefaultDevice`).
-* Elle crée une file d'attente de commandes (`CommandQueue`).
-* Elle charge la librairie compilée (`default.metallib`) pour pouvoir accéder à tes fonctions GPU plus tard.
-
-
-
-#### `src/metal/SharedStructs.h`
-
-* **Rôle :** Le "dictionnaire" commun entre le C++ et le Metal.
-* **Contenu :**
-* Contient uniquement des `struct` C simples.
-* C'est ici que tu définis la structure qui contiendra tes dimensions (`n`, `dx`, `xmin`, `dt`, etc.) que tu mettais auparavant dans `dim.cu`.
-* Utilisé par le CPU pour remplir les données, et par le GPU pour les lire.
-
-
-
----
-
 ### 2. Le Code GPU (Fichiers `.metal` et headers associés)
 
 Ces fichiers sont écrits en **MSL (Metal Shading Language)**.
-
-#### `src/metal/User.h` (Remplace `user.cu` / `user.cuh`)
-
-* **Rôle :** Bibliothèque de fonctions mathématiques utilisateur.
-* **Contenu :**
-* Contient les fonctions mathématiques pures (ex: fonction source, condition initiale).
-* Doit inclure `<metal_stdlib>`.
-* Ce sont des fonctions `inline` (pas de `kernel` ici) appelées par les kernels principaux.
-
-
 
 #### `src/metal/kernels.metal`
 
@@ -63,7 +30,6 @@ Ces fichiers sont écrits en **MSL (Metal Shading Language)**.
 * **Kernel `k_init` :** Initialise le tableau avec les conditions de départ.
 * **Kernel `k_boundaries` :** Applique les conditions aux limites sur les bords du domaine.
 * **Kernel `k_reduction` (Variation) :** Effectue la somme locale des différences (première étape de la réduction parallèle). Utilise la mémoire `threadgroup` (équivalent de `__shared__` en CUDA) pour sommer les threads d'un même groupe.
-
 
 
 ---
@@ -78,15 +44,6 @@ Ces fichiers gardent les mêmes noms de fonctions que dans les fichiers `.hxx` d
 * **Contenu :**
 * `allocate` : Crée un `MTLBuffer` en mode **Shared** (partagé). Stocke le pointeur dans une `std::map` globale pour faire le lien entre "adresse C++" et "Objet Metal". Retourne le pointeur brut (`contents()`).
 * `copy...` : Comme la mémoire est unifiée sur Apple Silicon, ces fonctions ne font plus de copie physique "Device vers Host". Elles servent surtout de barrière de synchronisation (attendre que le GPU ait fini le travail avant que le CPU ne lise).
-
-
-
-#### `src/metal/dim_metal.cpp` (Implémente `dim.hxx`)
-
-* **Rôle :** Gestion des constantes globales.
-* **Contenu :**
-* Dans `setDims` : Au lieu de copier vers `__constant__` (CUDA), tu remplis une instance de la structure définie dans `SharedStructs.h`. Cette structure sera passée en argument à chaque appel de kernel.
-
 
 
 #### `src/metal/iteration_metal.cpp` (Implémente `iteration.hxx`)
