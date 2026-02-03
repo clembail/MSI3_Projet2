@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstring>
-#include "user.hxx"
+#include "metal/User.h"
 
 Values::Values(Parameters & prm) : m_p(prm)
 {
@@ -20,7 +20,7 @@ Values::Values(Parameters & prm) : m_p(prm)
     m_xmax[i] =  m_p.xmax(i);
     nn *= m_n[i];
   }
-  
+
   n1 = m_n[2];      // nombre de points dans la premiere direction
   n2 = m_n[1] * n1; // nombre de points dans le plan des 2 premieres directions
   m_u = new double[nn];
@@ -40,7 +40,7 @@ void Values::init()
     for (j=m_imin[1]; j<=m_imax[1]; j++)
       for (k=m_imin[2]; k<=m_imax[2]; k++) {
         x = m_xmin[0] + i*m_dx[0];
-        y = m_xmin[1] + j*m_dx[1]; 
+        y = m_xmin[1] + j*m_dx[1];
         z = m_xmin[2] + k*m_dx[2];
         operator()(i,j,k) = cond_ini(x, y, z);
       }
@@ -143,7 +143,7 @@ void Values::plot(int order) const
   s << m_p.resultPath();
   s << "/0";
   mkdir_p(s.str().c_str());
-  
+
   s << "/plot_" << order << ".vtr";
   std::ofstream f(s.str().c_str());
 
@@ -174,7 +174,7 @@ void Values::plot(int order) const
     f << "\n";
   }
   f << " </DataArray>\n";
-   
+
   f << "</PointData>\n";
 
   f << " <Coordinates>\n";
@@ -201,7 +201,7 @@ void Values::plot(int order) const
 void Values::operator=(const Values &other)
 {
   int i;
-  
+
   for (i=0; i<3; i++) {
     m_n[i] = other.m_n[i];
     m_imin[i] = other.m_imin[i];

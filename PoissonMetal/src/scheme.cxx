@@ -1,7 +1,7 @@
 #include "scheme.hxx"
 #include "parameters.hxx"
 #include "version.hxx"
-#include "user.hxx"
+#include "metal/User.h"
 #include <cmath>
 
 #include <sstream>
