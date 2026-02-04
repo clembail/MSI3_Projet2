@@ -12,7 +12,6 @@
 /* A modifier */
 Values::Values(Parameters & prm) : m_p(prm)
 {
-  nn = 1;
   for (int i=0; i<3; i++) {
     m_imin[i] = m_p.imin(i);
     m_imax[i] = m_p.imax(i);
@@ -20,126 +19,81 @@ Values::Values(Parameters & prm) : m_p(prm)
     m_dx[i]   = m_p.dx(i);
     m_xmin[i] = m_p.xmin(i);
     m_xmax[i] = m_p.xmax(i);
-    nn *= m_n[i];
   }
   
-  n1 = m_n[2];      // nombre de points dans la premiere direction
-  n2 = m_n[1] * n1; // nombre de points dans le plan des 2 premieres directions
-  m_u = new REAL_TYPE[nn];
+  d = DeviceArray("u", m_n[0]+2, m_n[1]+2, m_n[2]+2);
 }
 
 Values::~Values()
 {
-/* A modifier */
-  delete [] m_u;
 }
 
 /* Introduire une lamda ou un objet fonction */
 void Values::init()
 {
-  int i, j, k;
-  REAL_TYPE x, y, z;
+  REAL_TYPE dx = m_dx[0];
+  REAL_TYPE dy = m_dx[1];
+  REAL_TYPE dz = m_dx[2];
+  REAL_TYPE xmin = m_xmin[0];
+  REAL_TYPE ymin = m_xmin[1];
+  REAL_TYPE zmin = m_xmin[2];
 
-  for (i=m_imin[0]; i<=m_imax[0]; i++)
-    for (j=m_imin[1]; j<=m_imax[1]; j++)
-      for (k=m_imin[2]; k<=m_imax[2]; k++) {
-        x = m_xmin[0] + i*m_dx[0];
-        y = m_xmin[1] + j*m_dx[1]; 
-        z = m_xmin[2] + k*m_dx[2];
-        operator()(i,j,k) = cond_ini(x, y, z);
-      }
+  DeviceArray u = d; // capture by value
+
+  Kokkos::parallel_for("init", 
+    Kokkos::MDRangePolicy<Kokkos::Rank<3>>({m_imin[0], m_imin[1], m_imin[2]}, {m_imax[0]+1, m_imax[1]+1, m_imax[2]+1}),
+    KOKKOS_LAMBDA(const int i, const int j, const int k) {
+      REAL_TYPE x = xmin + i*dx;
+      REAL_TYPE y = ymin + j*dy; 
+      REAL_TYPE z = zmin + k*dz;
+      u(i,j,k) = cond_ini(x, y, z);
+    });
 }
-
-struct sLim
-{
-  sLim(REAL_TYPE * vmin, REAL_TYPE * vmax, REAL_TYPE *dv, 
-    DeviceArray u, 
-    int *ivmin, int *ivmax)
-  : _u(u)
-  {
-    xmin =  vmin[0]; xmax =  vmax[0];
-    ymin =  vmin[1]; ymax =  vmax[1];
-    zmin =  vmin[2]; zmax =  vmax[2];
-    imin = ivmin[0]; imax = ivmax[0];
-    jmin = ivmin[1]; jmax = ivmax[1];
-    kmin = ivmin[2]; kmax = ivmax[2];
-  }
-
-  REAL_TYPE xmin, xmax, dx, ymin, ymax, dy, zmin, zmax, dz;
-  int imin, imax, jmin, jmax, kmin, kmax;
-  DeviceArray _u;
-  Kokkos::MDRangePolicy< Kokkos::Rank<2>> indices;
-};
-
-struct sLimX : public sLim
-{
-  sLimX(REAL_TYPE * vmin, REAL_TYPE * vmax, REAL_TYPE *dv, 
-    DeviceArray u, 
-    int *ivmin, int *ivmax) : sLim(vmin, vmax, dv, u, ivmin, ivmax)
-    {
-      indices= {{ivmin[1],ivmin[2]},
-                {ivmax[1],ivmax[2]}};
-    }
-  KOKKOS_FUNCTION
-  void operator() (long unsigned j, long unsigned k) const
-  {
-    REAL_TYPE y = ymin + j*dy; 
-    REAL_TYPE z = zmin + k*dz;
-    _u(imin,j,k) = cond_lim(xmin, y, z);
-    _u(imax,j,k) = cond_lim(xmax, y, z);
-  }
-};
-
-struct sLimY : public sLim
-{
-  sLimY(REAL_TYPE * vmin, REAL_TYPE * vmax, REAL_TYPE *dv, 
-    DeviceArray u, 
-    int *ivmin, int *ivmax) : sLim(vmin, vmax, dv, u, ivmin, ivmax)
-    {
-      indices= {{ivmin[0],ivmin[2]},
-                {ivmax[0],ivmax[2]}};
-      }
-  KOKKOS_FUNCTION
-  void operator() (long unsigned i, long unsigned k) const
-  {
-    REAL_TYPE x = xmin + i*dx; 
-    REAL_TYPE z = zmin + k*dz;
-    _u(i,jmin,k) = cond_lim(x, ymin, z);
-    _u(i,jmax,k) = cond_lim(x, ymax, z);
-  }
-};
-
-struct sLimZ : public sLim
-{
-  sLimZ(REAL_TYPE * vmin, REAL_TYPE * vmax, REAL_TYPE *dv, 
-    DeviceArray u, 
-    int *ivmin, int *ivmax) : sLim(vmin, vmax, dv, u, ivmin, ivmax)
-    {
-      indices= {{ivmin[0],ivmin[1]},
-                {ivmax[0],ivmax[1]}};
-      }
-  KOKKOS_FUNCTION
-  void operator() (long unsigned i, long unsigned j) const
-  {
-    REAL_TYPE x = xmin + i*dx;
-    REAL_TYPE y = ymin + j*dy; 
-    _u(i,j,kmin) = cond_lim(x, y, zmax);
-    _u(i,j,kmax) = cond_lim(x, y, zmax);
-  }
-};
 
 void Values::boundaries()
 {
+  DeviceArray u = d;
+  REAL_TYPE *xmin = m_xmin; // Capture pointer to array? No, need to capture values or array. 
+  // Arrays are members, cannot capture 'this' on device.
+  // Better to copy scalar values to local variables for capture.
+  
+  REAL_TYPE xmin_0 = m_xmin[0], xmax_0 = m_xmax[0], dx_0 = m_dx[0];
+  REAL_TYPE ymin_0 = m_xmin[1], ymax_0 = m_xmax[1], dy_0 = m_dx[1];
+  REAL_TYPE zmin_0 = m_xmin[2], zmax_0 = m_xmax[2], dz_0 = m_dx[2];
 
-  return;
-  sLimX IX(m_xmin, m_xmax, m_dx, d, m_imin, m_imax);
-  Kokkos::parallel_for("Lim X", IX.indices, IX);
+  int imin = m_imin[0], imax = m_imax[0];
+  int jmin = m_imin[1], jmax = m_imax[1];
+  int kmin = m_imin[2], kmax = m_imax[2];
 
-  sLimZ IY(m_xmin, m_xmax, m_dx, d, m_imin, m_imax);
-  Kokkos::parallel_for("Lim Y", IY.indices, IY);
+  // Lim X
+  Kokkos::parallel_for("Lim X", 
+    Kokkos::MDRangePolicy<Kokkos::Rank<2>>({jmin, kmin}, {jmax+1, kmax+1}),
+    KOKKOS_LAMBDA(const int j, const int k) {
+      REAL_TYPE y = ymin_0 + j*dy_0;
+      REAL_TYPE z = zmin_0 + k*dz_0;
+      u(imin, j, k) = cond_lim(xmin_0, y, z);
+      u(imax, j, k) = cond_lim(xmax_0, y, z);
+    });
 
-  sLimZ IZ(m_xmin, m_xmax, m_dx, d, m_imin, m_imax);
-  Kokkos::parallel_for("Lim Z", IZ.indices, IZ);
+  // Lim Y
+  Kokkos::parallel_for("Lim Y", 
+    Kokkos::MDRangePolicy<Kokkos::Rank<2>>({imin, kmin}, {imax+1, kmax+1}),
+    KOKKOS_LAMBDA(const int i, const int k) {
+      REAL_TYPE x = xmin_0 + i*dx_0;
+      REAL_TYPE z = zmin_0 + k*dz_0;
+      u(i, jmin, k) = cond_lim(x, ymin_0, z);
+      u(i, jmax, k) = cond_lim(x, ymax_0, z);
+    });
+
+  // Lim Z
+  Kokkos::parallel_for("Lim Z", 
+    Kokkos::MDRangePolicy<Kokkos::Rank<2>>({imin, jmin}, {imax+1, jmax+1}),
+    KOKKOS_LAMBDA(const int i, const int j) {
+      REAL_TYPE x = xmin_0 + i*dx_0;
+      REAL_TYPE y = ymin_0 + j*dy_0;
+      u(i, j, kmin) = cond_lim(x, y, zmin_0);
+      u(i, j, kmax) = cond_lim(x, y, zmax_0);
+    });
 }
 
 void Values::print() const
@@ -152,14 +106,16 @@ void Values::print() const
   int imin = m_imin[0]-1, jmin = m_imin[1]-1, kmin = m_imin[2]-1;
   int imax = m_imax[0]+1, jmax = m_imax[1]+1, kmax = m_imax[2]+1;
 
-  /* Introduire une lambda ou un objet fonction */  
+  HostArray h = Kokkos::create_mirror_view(d);
+  Kokkos::deep_copy(h, d);
+
   int i, j, k;
   for (i=imin; i<=imax; i++) {
     printf("\ni=%-4d", i);
     for(j=jmin; j<=jmax; j++) {
       printf("\n\tj=%-4d", j);
       for (k=kmin; k<=kmax; k++)
-        printf(" %7.2g", d_copy(i,j,k));
+        printf(" %7.2g", h(i,j,k));
     }
     printf("\n");
   }
@@ -175,8 +131,10 @@ void swap(T & a, T & b)
 
 void Values::swap(Values & other)
 {
-/* A modifier */
-  ::swap(m_u, other.m_u);
+  DeviceArray tmp = d;
+  d = other.d;
+  other.d = tmp;
+  
   int i;
   for (i=0; i<3; i++) {
     ::swap(m_n[i], other.m_n[i]);
@@ -186,9 +144,6 @@ void Values::swap(Values & other)
     ::swap(m_xmin[i], other.m_xmin[i]);
     ::swap(m_xmax[i], other.m_xmax[i]);
   }
-  ::swap(nn, other.nn);
-  ::swap(n1, other.n1);
-  ::swap(n2, other.n2);
 }
 
 void Values::plot(int order) const
@@ -271,8 +226,5 @@ void Values::operator=(const Values &other)
     m_xmin[i] = other.m_xmin[i];
     m_xmax[i] = other.m_xmax[i];
   }
-  nn = other.nn;
-  n1 = other.n1;
-  n2 = other.n2;
   Kokkos::deep_copy(d, other.d);
 }

@@ -32,7 +32,6 @@ public:
 private:
   
   Values(const Values &);
-  int n1, n2, nn;
   DeviceArray d;
   Parameters & m_p;
   int m_imin[3];
@@ -42,6 +41,12 @@ private:
   REAL_TYPE m_dx[3];
   REAL_TYPE m_xmin[3];
   REAL_TYPE m_xmax[3];
+
+public:
+  KOKKOS_INLINE_FUNCTION
+  REAL_TYPE & operator()(int i, int j, int k) const {
+    return d(i,j,k);
+  }
 
 };
 

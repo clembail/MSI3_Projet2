@@ -4,10 +4,11 @@
 
 #include <cmath>
 #include "type.hxx"
+#include <Kokkos_Core.hpp>
 
 /* Remplacer par des "fonctions inline kokkos" */
 
-inline
+KOKKOS_INLINE_FUNCTION
 REAL_TYPE cond_ini(REAL_TYPE x, REAL_TYPE y, REAL_TYPE z)
 {
   x -= 0.5;
@@ -19,13 +20,13 @@ REAL_TYPE cond_ini(REAL_TYPE x, REAL_TYPE y, REAL_TYPE z)
     return 0.0;
 }
 
-inline
+KOKKOS_INLINE_FUNCTION
 REAL_TYPE cond_lim(REAL_TYPE x, REAL_TYPE y, REAL_TYPE z)
 {
   return 0.0;
 }
 
-inline
+KOKKOS_INLINE_FUNCTION
 REAL_TYPE force(REAL_TYPE x, REAL_TYPE y, REAL_TYPE z, REAL_TYPE t)
 {
   return sin(x - 0.5) * cos(y - 0.5) * exp(-z * z);

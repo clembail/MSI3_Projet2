@@ -43,29 +43,32 @@ REAL_TYPE Scheme::iteration_domaine(int imin, int imax,
   REAL_TYPE xmin = m_xmin[0], dx = m_dx[0];
   REAL_TYPE ymin = m_xmin[1], dy = m_dx[1];
   REAL_TYPE zmin = m_xmin[2], dz = m_dx[2];
-  REAL_TYPE du_sum = 0.0;
   REAL_TYPE dt = m_dt;
   REAL_TYPE t = m_t;
+
+  DeviceArray u = m_u.deviceArray();
+  DeviceArray v = m_v.deviceArray();
   
-  /* Introduire une lambda ou un objet fonction */
-  for (int i = imin; i <= imax; i++)
-    for (int j = jmin; j <= jmax; j++)
-      for int (k = kmin; k <= kmax; k++) {
+  REAL_TYPE du_sum = 0.0;
 
-        REAL_TYPE du1 = (-2 * m_u(i, j, k) + m_u(i + 1, j, k) + m_u(i - 1, j, k)) * lam_x
-            + (-2 * m_u(i, j, k) + m_u(i, j + 1, k) + m_u(i, j - 1, k)) * lam_y
-            + (-2 * m_u(i, j, k) + m_u(i, j, k + 1) + m_u(i, j, k - 1)) * lam_z;
+  Kokkos::parallel_reduce("iteration_domaine",
+    Kokkos::MDRangePolicy<Kokkos::Rank<3>>({imin, jmin, kmin}, {imax+1, jmax+1, kmax+1}),
+    KOKKOS_LAMBDA(const int i, const int j, const int k, REAL_TYPE & local_sum) {
+      
+      REAL_TYPE du1 = (-2 * u(i, j, k) + u(i + 1, j, k) + u(i - 1, j, k)) * lam_x
+          + (-2 * u(i, j, k) + u(i, j + 1, k) + u(i, j - 1, k)) * lam_y
+          + (-2 * u(i, j, k) + u(i, j, k + 1) + u(i, j, k - 1)) * lam_z;
 
-        REAL_TYPE x = xmin + i * dx;
-        REAL_TYPE y = ymin + j * dy;
-        REAL_TYPE z = zmin + k * dz;
-        REAL_TYPE du2 = force(x, y, z, t);
+      REAL_TYPE x = xmin + i * dx;
+      REAL_TYPE y = ymin + j * dy;
+      REAL_TYPE z = zmin + k * dz;
+      REAL_TYPE du2 = force(x, y, z, t);
 
-        REAL_TYPE du = dt * (du1 + du2);
-        m_v(i, j, k) = m_u(i, j, k) + du;
+      REAL_TYPE du = dt * (du1 + du2);
+      v(i, j, k) = u(i, j, k) + du;
 
-        du_sum += du > 0 ? du : -du;
-      }
+      local_sum += du > 0 ? du : -du;
+    }, du_sum);
 
   return du_sum;
 }

@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
 
   T_total.start();
 
+  Kokkos::ScopeGuard k(argc, argv);
+  // Parameters Prm(argc, argv); // Moved inside ScopeGuard implicitly by being after it
   Parameters Prm(argc, argv);
   if (Prm.help())
     return 0;
