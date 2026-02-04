@@ -2,167 +2,218 @@
 
 import os, sys, subprocess, platform, argparse, shutil, multiprocessing
 
+
 def removeBase(s, baseDir):
-  p = s.find(baseDir)
-  if p>=0:
-    s = s[0:p] + '.' + s[p + len(baseDir):]
-  return s
+    p = s.find(baseDir)
+    if p >= 0:
+        s = s[0:p] + "." + s[p + len(baseDir) :]
+    return s
+
 
 def printCommand(cmd, baseDir):
-  if not cmd:
-    return
-    
-  print('____________________________')
-  print(removeBase(cmd[0], baseDir))
-  for w in cmd[1:]:
-    if w[0] == '-':
-      print('\t' + removeBase(w, baseDir))
-    else:
-      print('\t\t' + removeBase(w, baseDir))
-  print('____________________________')
-     
+    if not cmd:
+        return
+
+    print("____________________________")
+    print(removeBase(cmd[0], baseDir))
+    for w in cmd[1:]:
+        if w[0] == "-":
+            print("\t" + removeBase(w, baseDir))
+        else:
+            print("\t\t" + removeBase(w, baseDir))
+    print("____________________________")
+
+
 def init():
-  p = platform.system()
-  if p == 'Windows':
-      defaultCompiler = 'msvc'
-      gen = '-GNinja'
-  else:
-      defaultCompiler = 'gnu'
-      gen = '-GUnix Makefiles'
+    p = platform.system()
+    if p == "Windows":
+        defaultCompiler = "msvc"
+    else:
+        defaultCompiler = "gnu"
 
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-d', '--debug', action='store_true')
-  parser.add_argument('-c', '--compiler', default=defaultCompiler)
-  parser.add_argument('--float', action='store_true')
-  
-  args = parser.parse_args()
-  args.baseDir = os.getcwd()
-    
-  if p == 'Windows':
-      args.cmake_gen = '-GNinja'
-  else:
-      args.cmake_gen = '-GUnix Makefiles'
-      
-  args.env = os.environ.copy()
-  if args.compiler == 'gnu':
-    args.env['CC'] = 'gcc'
-    args.env['CXX'] = 'g++'
-  elif args.compiler == 'intel':
-    args.env['CC'] = 'icx'
-    args.env['CXX'] = 'icpx'
-  elif args.compiler == 'msvc':
-    args.env['CC'] = 'cl.exe'
-    args.env['CXX'] = 'cl.exe'
-  
-  if args.debug:
-     args.mode = "debug"
-  else:
-     args.mode = "release"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", action="store_true")
+    parser.add_argument("-c", "--compiler", default=defaultCompiler)
+    parser.add_argument("--float", action="store_true")
+    # Nouvelles options pour les GPU
+    parser.add_argument("--cuda", action="store_true", help="Compile pour GPU NVIDIA")
+    parser.add_argument("--hip", action="store_true", help="Compile pour GPU AMD (APU)")
 
-  args.cmake_params = []
-  return args
+    args = parser.parse_args()
+    args.baseDir = os.getcwd()
+
+    if p == "Windows":
+        args.cmake_gen = "-GNinja"
+    else:
+        args.cmake_gen = "-GUnix Makefiles"
+
+    args.env = os.environ.copy()
+    if args.compiler == "gnu":
+        args.env["CC"] = "gcc"
+        args.env["CXX"] = "g++"
+    elif args.compiler == "intel":
+        args.env["CC"] = "icx"
+        args.env["CXX"] = "icpx"
+    elif args.compiler == "msvc":
+        args.env["CC"] = "cl.exe"
+        args.env["CXX"] = "cl.exe"
+
+    if args.debug:
+        args.mode = "debug"
+    else:
+        args.mode = "release"
+
+    args.cmake_params = []
+    return args
+
 
 def build(args, subDir):
-
-  if subDir:
-    baseDir = os.path.join(args.baseDir, subDir)
-  else:
-    baseDir = args.baseDir
-  print (baseDir)
-    
-  srcDir = os.path.join(baseDir, 'src')
-  
-  if hasattr(args, 'backend'):
-    buildDir = os.path.join(baseDir, 'build', args.compiler, args.backend, args.mode)
-    installDir = os.path.join(baseDir, 'install', args.compiler, args.backend, args.mode)
-  else:
-    buildDir = os.path.join(baseDir, 'build', args.compiler, args.mode)
-    installDir = os.path.join(baseDir, 'install', args.compiler, args.mode)
-    
-  if hasattr(args, 'float'):
-    if args.float:
-      REAL_TYPE = 'float'
+    if subDir:
+        baseDir = os.path.join(args.baseDir, subDir)
     else:
-      REAL_TYPE = 'double'
+        baseDir = args.baseDir
 
-    buildDir = os.path.join(buildDir, REAL_TYPE)
-    installDir = os.path.join(installDir, REAL_TYPE)
-    
-  if not os.path.exists(srcDir):
-    raise Exception("source directory " + srcDir + " doesn't exist")
-  if not os.path.exists(buildDir):
-    os.makedirs(buildDir)
+    srcDir = os.path.join(baseDir, "src")
 
-  cmake_params = ['-DCMAKE_INSTALL_MESSAGE=LAZY']
-  cmake_params.append(args.cmake_gen)
-  cmake_params.append('-DCMAKE_INSTALL_PREFIX=' + installDir)
-  cmake_params.append('-DCMAKE_BUILD_TYPE=' + args.mode.capitalize())
-  if hasattr(args, 'float') and args.float:
-      cmake_params.append('-DFLOAT_TYPE=1')
-  cmake_params += args.cmake_params
-  
-  commands = [
-    ['cmake'] + cmake_params + ['-S', srcDir, '-B', buildDir],
-    ['cmake', '--build', buildDir],
-    ['cmake', '--install', buildDir]
-  ]
+    if hasattr(args, "backend"):
+        buildDir = os.path.join(
+            baseDir, "build", args.compiler, args.backend, args.mode
+        )
+        installDir = os.path.join(
+            baseDir, "install", args.compiler, args.backend, args.mode
+        )
+    else:
+        buildDir = os.path.join(baseDir, "build", args.compiler, args.mode)
+        installDir = os.path.join(baseDir, "install", args.compiler, args.mode)
 
-  for c in commands:
-    printCommand(c, args.baseDir)
-    err = subprocess.call(c, env=args.env)
-    if not err == 0:
-      raise  Exception("Erreur")
+    if hasattr(args, "float"):
+        if args.float:
+            REAL_TYPE = "float"
+        else:
+            REAL_TYPE = "double"
+
+        buildDir = os.path.join(buildDir, REAL_TYPE)
+        installDir = os.path.join(installDir, REAL_TYPE)
+
+    if not os.path.exists(srcDir):
+        raise Exception("source directory " + srcDir + " doesn't exist")
+    if not os.path.exists(buildDir):
+        os.makedirs(buildDir)
+
+    cmake_params = ["-DCMAKE_INSTALL_MESSAGE=LAZY"]
+    cmake_params.append(args.cmake_gen)
+    cmake_params.append("-DCMAKE_INSTALL_PREFIX=" + installDir)
+    cmake_params.append("-DCMAKE_BUILD_TYPE=" + args.mode.capitalize())
+    if hasattr(args, "float") and args.float:
+        cmake_params.append("-DFLOAT_TYPE=1")
+    cmake_params += args.cmake_params
+
+    commands = [
+        ["cmake"] + cmake_params + ["-S", srcDir, "-B", buildDir],
+        ["cmake", "--build", buildDir],
+        ["cmake", "--install", buildDir],
+    ]
+
+    for c in commands:
+        printCommand(c, args.baseDir)
+        err = subprocess.call(c, env=args.env)
+        if not err == 0:
+            raise Exception("Erreur lors de la compilation")
+
 
 def build_kokkos(args):
-  
-  class A:
-    pass
-  a = A()
-  for p in args.__dict__.keys():
-    if not p == 'float':
-       exec("a." + p + '= args.' + p)
-  
-  kokkosBaseDir = os.path.join(a.baseDir, 'kokkos')
-  if not os.path.exists(os.path.join(kokkosBaseDir, 'src')):
-    os.makedirs(kokkosBaseDir, exist_ok=True)
-    subprocess.run(['git', 'clone', 'git@github.com:kokkos/kokkos.git'],
-                   cwd=kokkosBaseDir)
-    subprocess.run(['git', 'checkout', '5.0.1'],
-                   cwd=os.path.join(kokkosBaseDir, 'kokkos'))
-    os.rename(os.path.join(kokkosBaseDir, 'kokkos'),
-              os.path.join(kokkosBaseDir, 'src'))
-    shutil.rmtree(os.path.join(kokkosBaseDir, 'src', '.git'), ignore_errors=True)
+    class A:
+        pass
 
-  for b in ['serial', 'openmp', 'cuda']:
-    a.backend = b
-    a.cmake_params = ['-DKokkos_ENABLE_SERIAL=ON']
-    if b == 'openmp':
-      a.cmake_params.append('-DKokkos_ENABLE_OPENMP=ON')
-    elif b == 'cuda':
-      a.cmake_params.append('-DKokkos_ENABLE_CUDA=ON')
-      
-    build(a, 'kokkos')
-    
+    a = A()
+    for p in args.__dict__.keys():
+        if not p == "float":
+            exec("a." + p + "= args." + p)
+
+    kokkosBaseDir = os.path.join(a.baseDir, "kokkos")
+    if not os.path.exists(os.path.join(kokkosBaseDir, "src")):
+        os.makedirs(kokkosBaseDir, exist_ok=True)
+        # Utilisation de HTTPS pour éviter les soucis de clés SSH
+        subprocess.run(
+            ["git", "clone", "https://github.com/kokkos/kokkos.git"], cwd=kokkosBaseDir
+        )
+        # Version 4.1.00 pour une compatibilité maximale
+        subprocess.run(
+            ["git", "checkout", "4.1.00"], cwd=os.path.join(kokkosBaseDir, "kokkos")
+        )
+        os.rename(
+            os.path.join(kokkosBaseDir, "kokkos"), os.path.join(kokkosBaseDir, "src")
+        )
+        shutil.rmtree(os.path.join(kokkosBaseDir, "src", ".git"), ignore_errors=True)
+
+    # Liste dynamique des backends
+    backends = ["serial", "openmp"]
+    if args.cuda:
+        backends.append("cuda")
+    if args.hip:
+        backends.append("hip")
+
+    for b in backends:
+        a.backend = b
+        a.env = args.env.copy()  # Copie fraîche de l'environnement
+        a.cmake_params = ["-DKokkos_ENABLE_SERIAL=ON"]
+
+        if b == "openmp":
+            a.cmake_params.append("-DKokkos_ENABLE_OPENMP=ON")
+            a.cmake_params.append(
+                "-DKokkos_ARCH_NATIVE=ON"
+            )  # Optimise pour Ryzen/Intel
+        elif b == "cuda":
+            a.cmake_params.append("-DKokkos_ENABLE_CUDA=ON")
+            a.cmake_params.append("-DKokkos_ENABLE_CUDA_LAMBDA=ON")
+        elif b == "hip":
+            a.env["CXX"] = "hipcc"  # Impératif pour AMD
+            a.cmake_params.append("-DKokkos_ENABLE_HIP=ON")
+            # Architecture Vega 8 pour Ryzen 5 3500U
+            a.cmake_params.append("-DKokkos_ARCH_VEGA8=ON")
+
+        build(a, "kokkos")
+
+
 def build_code(args):
-  class A:
-    pass
-  a = A()
-  for p in args.__dict__.keys():
-    exec("a." + p + '= args.' + p)
+    class A:
+        pass
 
-  for b in ['serial', 'openmp', 'cuda']:
-    a.backend = b
-    a.cmake_params = ['-DKokkos_DIR=' +
-                           os.path.join(a.baseDir, 'kokkos', 'install',
-                                        a.compiler, a.backend, a.mode, 
-                                        'lib', 'cmake', 'Kokkos'),
-                          '-DVERSION=' + b]
-    build(a, None)
- 
-if __name__ == '__main__':
+    a = A()
+    for p in args.__dict__.keys():
+        exec("a." + p + "= args." + p)
 
-  args = init()
-  build_kokkos(args)
-  build_code(args)
+    backends = ["serial", "openmp"]
+    if args.cuda:
+        backends.append("cuda")
+    if args.hip:
+        backends.append("hip")
+
+    for b in backends:
+        a.backend = b
+        a.env = args.env.copy()
+        if b == "hip":
+            a.env["CXX"] = "hipcc"
+
+        a.cmake_params = [
+            "-DKokkos_DIR="
+            + os.path.join(
+                a.baseDir,
+                "kokkos",
+                "install",
+                a.compiler,
+                a.backend,
+                a.mode,
+                "lib",
+                "cmake",
+                "Kokkos",
+            ),
+            "-DVERSION=" + b,
+        ]
+        build(a, None)
 
 
+if __name__ == "__main__":
+    args = init()
+    build_kokkos(args)
+    build_code(args)
