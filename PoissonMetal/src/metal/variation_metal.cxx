@@ -1,3 +1,4 @@
+#include "dim.hxx"
 #include "variation.hxx"
 #include "values.hxx"
 #include "memmove.hxx" // Pour allocate/deallocate/copy
@@ -77,10 +78,17 @@ double variation(
     MTL::Buffer* bufferV = getMetalBuffer((void*)v.dataGPU());
     MTL::Buffer* bufferDiff = getMetalBuffer(diff);
 
+    constants& cst = getConstants();
+    // cst.d_dt = dt;
+    // for (int i = 0; i < 3; i++){
+    //   cst.d_n[i] = n[i];
+    // }
+
     encoder -> setBuffer(bufferU, 0, 0);
     encoder -> setBuffer(bufferV, 0, 1);
     encoder -> setBuffer(bufferDiff, 0, 2);
     encoder -> setBytes(&n, sizeof(int), 3);
+    encoder -> setBytes(&cst, sizeof(constants),4);
 
     MTL::Size groupSize = MTL::Size::Make(GroupSizeVal, 1, 1);
     MTL::Size gridSize = MTL::Size::Make(nbGroups, 1, 1);

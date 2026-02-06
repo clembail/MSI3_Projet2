@@ -1,5 +1,5 @@
 #include <Metal/Metal.hpp>
-#include <Foundation/Foundation.h>
+#include <Foundation/Foundation.hpp>
 #include "values.hxx"
 #include "Context.hxx"
 #include "SharedStructs.h"

@@ -35,6 +35,9 @@ public:
   const double * dataGPU() const { return d_u; }
   void synchronized(bool b) { h_synchronized = b; }
 
+  double* get_d_u() { return d_u;}
+  const double* get_d_u() const { return d_u;}
+
 private:
 
   Values(const Values &);

@@ -13,7 +13,7 @@
   using namespace std;
 #endif
 
-inline double cond_ini(double x, double y, double z)
+inline float cond_ini(float x, float y, float z)
 {
   x -= 0.5;
   y -= 0.5;
@@ -24,12 +24,12 @@ inline double cond_ini(double x, double y, double z)
     return 0.0;
 }
 
-inline double cond_lim(double x, double y, double z)
+inline float cond_lim(float x, float y, float z)
 {
   return 0.0;
 }
 
-inline double force(double x, double y, double z, double t)
+inline float force(float x, float y, float z, float t)
 {
   return sin(x - 0.5) * cos(y - 0.5) * exp(-z * z);
 }

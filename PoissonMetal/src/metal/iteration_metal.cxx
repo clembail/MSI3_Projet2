@@ -35,8 +35,8 @@ void iteration(
     library -> release();
   }
 
-  MTL::Buffer* bufferSource = getMetalBuffer(u.d_u);
-  MTL::Buffer* bufferTarget = getMetalBuffer(v.d_u);
+  MTL::Buffer* bufferSource = getMetalBuffer(u.get_d_u());
+  MTL::Buffer* bufferTarget = getMetalBuffer(v.get_d_u());
   if (bufferSource == nullptr || bufferTarget == nullptr){
     std::cerr << "Failed to create Metal buffer";
     return;
@@ -69,5 +69,5 @@ void iteration(
   encoder -> endEncoding();
 
   commandBuffer -> commit();
-  commandBuffer -> waitUntilCompleted();
+  // commandBuffer -> waitUntilCompleted();
 }

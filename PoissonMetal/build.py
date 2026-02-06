@@ -20,8 +20,8 @@ def manage(args):
   e = os.environ.copy()
   if args.compiler == 'gnu':
       if p == 'Darwin':
-          e['CC'] = 'clang'
-          e['CXX'] = 'clang++'
+          e['CC'] = '/usr/bin/clang'
+          e['CXX'] = '/usr/bin/clang++'
       else :
           e['CC'] = 'gcc'
           e['CXX'] = 'g++'

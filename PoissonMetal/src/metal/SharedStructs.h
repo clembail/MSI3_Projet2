@@ -1,20 +1,20 @@
 #pragma once
-#include <simd/simd.h>
 
-struct constants{
+// Structures partagées entre C++ et Metal
+struct constants {
+  float d_xmin[3];
+  float d_dx[3];
+  float d_lambda[3];
+  float d_dt;
   int d_n[3];
-  double d_xmin[3];
-  double d_dx[3];
-  double d_lambda[3];
-  double d_dt;
+  // ... autres champs partagés
 };
 
-#ifdef __cplusplus
+// Code UNIQUEMENT pour C++ (pas pour Metal)
+#ifndef __METAL_VERSION__
 
-// Forward declaration pour ne pas inclure tout Metal.hpp ici
-namespace MTL { class Buffer; }
+#include <Metal/Metal.hpp>
 
-// Prototype de ta fonction helper (N'oublie pas le ;)
 MTL::Buffer* getMetalBuffer(void* ptr);
 
-#endif
+#endif  // __METAL_VERSION__
