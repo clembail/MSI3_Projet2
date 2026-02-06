@@ -27,26 +27,47 @@ find_library(FOUNDATION_LIB Foundation REQUIRED)
 
 configure_file(version.hxx.in version.hxx @ONLY)
 
+set(METAL_SRC "${CMAKE_CURRENT_SOURCE_DIR}/metal/kernels.metal")
+set(METAL_LIB "${CMAKE_CURRENT_BINARY_DIR}/default.metallib")
+
+add_custom_command(
+    OUTPUT ${METAL_LIB}
+    COMMAND xcrun -sdk macosx metal -o ${METAL_LIB} ${METAL_SRC}
+    DEPENDS ${METAL_SRC}
+    COMMENT "Compiling Metal shaders to default.metallib"
+)
+
 set(SRCS
     main.cxx
     parameters.cxx
     values.cxx
     scheme.cxx
-    user.cxx
+    #
     common/arguments.cxx
     common/os.cxx
     common/pause.cxx
     common/timer.cxx
+    #
+    metal/Context.cxx
+    metal/dim_metal.cxx
+    metal/iteration_metal.cxx
+    metal/memmove_metal.cxx
+    metal/metal_implementation.cxx
+    metal/values_metal.cxx
+    metal/variation_metal.cxx
   )
 
 add_executable(
   ${VERSION}
   ${SRCS}
+  ${METAL_LIB}
   )
 
 target_link_libraries(${VERSION} PRIVATE
-    ${METAL_LIB} ${FOUNDATION_LIB}
+    ${METAL_LIB}
+    ${FOUNDATION_LIB}
 )
 
 
 install(TARGETS ${VERSION} DESTINATION .)
+install(FILES ${METAL_LIB} DESTINATION .)
