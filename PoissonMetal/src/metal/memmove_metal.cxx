@@ -1,11 +1,10 @@
-#include "Metal/MTLBlitCommandEncoder.hpp"
+#include <Metal/Metal.hpp>
 #include "memmove.hxx"
 #include "Context.hxx"
 #include "SharedStructs.h"
 #include <iostream>
 #include <cstring>
 #include <map>
-#include <Metal/Metal.hpp>
 
 static std::map<void*, MTL::Buffer*> _buffers;
 

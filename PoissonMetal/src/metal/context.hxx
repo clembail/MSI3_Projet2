@@ -1,5 +1,4 @@
 #pragma once
-#include <Foundation/Foundation.hpp>
 #include <Metal/Metal.hpp>
 
 class Context {

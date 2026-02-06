@@ -6,6 +6,7 @@ struct constants{
   double d_xmin[3];
   double d_dx[3];
   double d_lambda[3];
+  double d_dt;
 };
 
 #ifdef __cplusplus
