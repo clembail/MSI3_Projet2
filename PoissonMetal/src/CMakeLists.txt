@@ -32,7 +32,7 @@ set(METAL_LIB "${CMAKE_CURRENT_BINARY_DIR}/default.metallib")
 
 add_custom_command(
     OUTPUT ${METAL_LIB}
-    COMMAND xcrun -sdk macosx metal -o ${METAL_LIB} ${METAL_SRC}
+    COMMAND xcrun -sdk macosx metal -std=macos-metal -o ${METAL_LIB} ${METAL_SRC}
     DEPENDS ${METAL_SRC}
     COMMENT "Compiling Metal shaders to default.metallib"
 )

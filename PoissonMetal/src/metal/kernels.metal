@@ -110,10 +110,10 @@ kernel void k_reduce(
   device const double* input      [[buffer(0)]],
   device double* partialSums      [[buffer(1)]],
   const int& n                    [[buffer(2)]],
-  uint gid                        [[thread_position_in_grid]]
-  uint tid                        [[thread_position_in_threadgroup]]
-  uint group_id                   [[threadgroup_position_in_grid]]
-  uint group_size                 [[threads_per_threadgroup]]
+  uint gid                        [[thread_position_in_grid]],
+  uint tid                        [[thread_position_in_threadgroup]],
+  uint group_id                   [[threadgroup_position_in_grid]],
+  uint group_size                 [[threads_per_threadgroup]],
   threadgroup double* sdata       [[threadgroup(0)]]
 )
 {
