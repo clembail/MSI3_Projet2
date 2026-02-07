@@ -1,0 +1,36 @@
+# Implementation Plan - Complete CUDA Poisson Project
+
+The project is missing the core CUDA kernel for the Poisson iteration. The goal is to implement this kernel and the host launcher function.
+
+## User Review Required
+> [!IMPORTANT]
+> I am assuming a standard 7-point stencil (3D central finite difference) for the diffusion/Poisson equation based on the file names and structure.
+> u^{n+1} = u^n + dt * ( (u_{i+1} - 2u_i + u_{i-1})/dx^2 + ... )
+
+## Proposed Changes
+
+### CUDA Implementation
+
+#### [MODIFY] [iteration.cu](file:///Users/clementbaillet/Cours/2025-2026/msI3ProgrammationHybrideMultiCoeur/Projet2_incomplet/PoissonCuda/src/cuda/iteration.cu)
+- Implement `iteration_kernel`:
+    - Calculate global 3D index (i, j, k).
+    - Check bounds (imin to imax, etc, or just 1 to n-2 avoiding boundaries).
+    - Apply the discrete Laplacian stencil.
+    - Write to output array.
+- Implement [iteration](file:///Users/clementbaillet/Cours/2025-2026/msI3ProgrammationHybrideMultiCoeur/Projet2_incomplet/PoissonCuda/src/scheme.cxx#48-59) host function:
+    - Compute grid and block dimensions.
+    - Launch `iteration_kernel`.
+    - Check for CUDA errors.
+
+## Verification Plan
+
+### Automated Tests
+- Run the build script: [./build.py](file:///Users/clementbaillet/Cours/2025-2026/msI3ProgrammationHybrideMultiCoeur/Projet2_incomplet/PoissonCuda/build.py)
+- Run the executable (if it produces output or validation):
+    - `./install/release/PoissonCuda` (assuming default name)
+    - Check for "CUDA Error" or NaN values.
+- I will look for any test scripts or "check" modes.
+
+### Manual Verification
+- Compile code.
+- Run code and observe output (should converge or show reasonable values).
