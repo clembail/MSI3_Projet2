@@ -37,7 +37,7 @@ kernel void k_iteration(
   float y = cst.d_xmin[1] + j * cst.d_dx[1];
   float z = cst.d_xmin[2] + k * cst.d_dx[2];
 
-  float f = force(x, y, z, 0);
+  float f = force(x, y, z, cst.d_t);
 
   v[index] = u[index] + cst.d_dt * (lap + f);
 }

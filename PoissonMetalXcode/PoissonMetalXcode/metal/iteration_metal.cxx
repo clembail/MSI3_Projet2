@@ -8,10 +8,7 @@
 #include <Foundation/Foundation.hpp>
 
 void iteration(
-    Values & v, Values & u, float dt, int n[3],
-    int imin, int imax,
-    int jmin, int jmax,
-    int kmin, int kmax)
+    Values & v, Values & u, float dt, int n[3], float m_t)
 {
   static MTL::ComputePipelineState* pso = nullptr;
   if (pso == nullptr){
@@ -44,6 +41,7 @@ void iteration(
 
   constants& cst = getConstants();
   cst.d_dt = dt;
+  cst.d_t = m_t;
   for (int i = 0; i < 3; i++){
     cst.d_n[i] = n[i];
   }

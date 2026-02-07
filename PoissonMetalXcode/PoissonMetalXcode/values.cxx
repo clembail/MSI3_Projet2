@@ -46,24 +46,6 @@ Values::~Values()
   deallocate(d_u);
 }
 
-// void Values::zero()
-// {
-//   ::zero(d_u, nn);
-//   h_synchronized = false;
-// }
-
-// void Values::init()
-// {
-//   ::init(d_u, m_n);
-//   h_synchronized = false;
-// }
-
-// void Values::boundaries()
-// {
-//   ::boundaries(d_u, m_n, m_imin, m_imax);
-//   h_synchronized = false;
-// }
-
 std::ostream & operator<< (std::ostream & f, const Values & v)
 {
   v.print(f);
