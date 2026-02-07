@@ -9,7 +9,7 @@
 static std::map<void*, MTL::Buffer*> _buffers;
 
 double* allocate(int n){
-  size_t size = n*sizeof(float);
+  size_t size = n*sizeof(double);
   MTL::Buffer* buffer = Context::instance()
     ->getDevice()
     ->newBuffer(size, MTL::ResourceStorageModeShared);
