@@ -62,12 +62,12 @@ Parameters::Parameters(int argc, char ** argv) : Arguments(argc, argv)
   if (dt_max > d) dt_max = d;
   d = 0.1/(m_n[2]*m_n[2]);
   if (dt_max > d) dt_max = d;
- 
+
   m_dt = Get("dt", dt_max);
   m_freq = Get("out", 0);
-  
+
   if (!m_help) {
- 
+
     m_path = "results";
     mkdir_p(m_path.c_str());
 
@@ -75,7 +75,7 @@ Parameters::Parameters(int argc, char ** argv) : Arguments(argc, argv)
       std::cerr << "Warning : provided dt (" << m_dt
                 << ") is greater then the recommended maximum (" << dt_max
                 << ")" << std::endl;
-    
+
     for (int i=0; i<3; i++) {
       m_xmin[i] = 0.0;
       m_dx[i] = m_n[i]>1 ? 1.0/(m_n[i]-1) : 0.0;
@@ -106,7 +106,7 @@ bool Parameters::help()
 
 std::ostream & operator<<(std::ostream &f, const Parameters & p)
 {
-  f << "\nSequential Computation\n\n"; 
+  f << "\nMetal Computation\n\n";
   f << "Internal domain :   "
     << "[" << p.xmin(0) + p.dx(0) << ", " << p.xmax(0) - p.dx(0) << "] x "
     << "[" << p.xmin(1) + p.dx(1) << ", " << p.xmax(1) - p.dx(1) << "] x "
@@ -122,4 +122,3 @@ std::ostream & operator<<(std::ostream &f, const Parameters & p)
 
   return f;
 }
-

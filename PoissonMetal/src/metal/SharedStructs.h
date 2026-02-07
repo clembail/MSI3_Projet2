@@ -7,7 +7,7 @@ struct constants {
   float d_lambda[3];
   float d_dt;
   int d_n[3];
-  // ... autres champs partagés
+  int padding; // Alignement
 };
 
 // Code UNIQUEMENT pour C++ (pas pour Metal)
@@ -16,5 +16,8 @@ struct constants {
 #include <Metal/Metal.hpp>
 
 MTL::Buffer* getMetalBuffer(void* ptr);
+
+// AJOUT IMPORTANT : La déclaration partagée
+constants& getConstants();
 
 #endif  // __METAL_VERSION__

@@ -5,6 +5,7 @@
 #include "SharedStructs.h"
 #include "dim.hxx"
 
+
 void Values::init()
 {
   MTL::Device* device = Context::instance() -> getDevice();
@@ -36,6 +37,13 @@ void Values::init()
     return;
   }
   constants& cst = getConstants();
+  for (int i=0; i<3; i++) {
+        cst.d_n[i] = m_n[i];
+        cst.d_xmin[i] = m_xmin[i];
+        cst.d_dx[i] = m_dx[i];
+        cst.d_lambda[i] = 1.0 / (m_dx[i] * m_dx[i]);
+    }
+    cst.d_dt = 0.0;
 
   MTL::CommandQueue* queue = Context::instance() -> getCommandQueue();
   MTL::CommandBuffer* commandBuffer = queue -> commandBuffer();
@@ -92,6 +100,11 @@ void Values::boundaries()
   }
 
   constants& cst = getConstants();
+  for (int i=0; i<3; i++) {
+        cst.d_n[i] = m_n[i];
+        cst.d_xmin[i] = m_xmin[i];
+        cst.d_dx[i] = m_dx[i];
+    }
 
   MTL::CommandQueue* queue = Context::instance() -> getCommandQueue();
   MTL::CommandBuffer* commandBuffer = queue -> commandBuffer();

@@ -69,5 +69,5 @@ void iteration(
   encoder -> endEncoding();
 
   commandBuffer -> commit();
-  // commandBuffer -> waitUntilCompleted();
+  commandBuffer -> waitUntilCompleted();
 }

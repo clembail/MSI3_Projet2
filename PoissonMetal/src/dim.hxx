@@ -9,4 +9,4 @@ void setDims(const int *n,
              const double *dx,
              const double *lambda);
 
-constants& getConstants();
+// constants& getConstants();
