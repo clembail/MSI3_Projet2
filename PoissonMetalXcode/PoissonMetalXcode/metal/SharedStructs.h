@@ -18,6 +18,6 @@ struct constants {
 MTL::Buffer* getMetalBuffer(void* ptr);
 
 // AJOUT IMPORTANT : La déclaration partagée
-constants& getConstants();
+//constants& getConstants();
 
 #endif  // __METAL_VERSION__

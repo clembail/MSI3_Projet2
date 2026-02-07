@@ -1,11 +1,11 @@
-double * allocate(int n);
-void deallocate(double *&d);
+float* allocate(int n);
+void deallocate(float *&d);
 
 void copyDeviceToHost
-        (double *h, double *d, int n);
+        (float *h, float *d, int n);
         
 void copyHostToDevice
-        (double *h, double *d, int n);
+        (float *h, float *d, int n);
 
 void copyDeviceToDevice
-        (double *d_out, double *d_in, int n);
+        (float *d_out, float *d_in, int n);

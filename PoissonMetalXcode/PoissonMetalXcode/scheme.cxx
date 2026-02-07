@@ -49,7 +49,7 @@ Scheme::~Scheme()
   freeVariationData(d_diff, d_diffPartial);
 }
 
-double Scheme::present()
+float Scheme::present()
 {
   return m_t;
 }
@@ -72,7 +72,7 @@ bool Scheme::iteration()
     int total_points = n_int[0] * n_int[1] * n_int[2];
 
     // Appel de la fonction définie dans variation_metal.cxx
-    // Elle va : calculer la diff, réduire la somme, et retourner le double sur CPU
+    // Elle va : calculer la diff, réduire la somme, et retourner le float sur CPU
     m_duv = ::variation(m_u, m_v, d_diff, d_diffPartial, total_points);
 
     // 3. Gestion du temps et échange
@@ -82,20 +82,20 @@ bool Scheme::iteration()
     return true;
 }
 
-// double Scheme::iteration_domaine(int imin, int imax,
+// float Scheme::iteration_domaine(int imin, int imax,
 //                                  int jmin, int jmax,
 //                                  int kmin, int kmax)
 // {
-//   double lam_x = 1 / (m_dx[0] * m_dx[0]);
-//   double lam_y = 1 / (m_dx[1] * m_dx[1]);
-//   double lam_z = 1 / (m_dx[2] * m_dx[2]);
-//   double xmin = m_xmin[0];
-//   double ymin = m_xmin[1];
-//   double zmin = m_xmin[2];
+//   float lam_x = 1 / (m_dx[0] * m_dx[0]);
+//   float lam_y = 1 / (m_dx[1] * m_dx[1]);
+//   float lam_z = 1 / (m_dx[2] * m_dx[2]);
+//   float xmin = m_xmin[0];
+//   float ymin = m_xmin[1];
+//   float zmin = m_xmin[2];
 //   int i, j, k;
-//   double du, du1, du2, du_sum = 0.0;
+//   float du, du1, du2, du_sum = 0.0;
 
-//   double x, y, z;
+//   float x, y, z;
 
 //   for (i = imin; i <= imax; i++)
 //     for (j = jmin; j <= jmax; j++)

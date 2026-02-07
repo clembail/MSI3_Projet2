@@ -59,14 +59,14 @@ public:
       m_elapsed += (m_end.tv_sec - m_start.tv_sec) + 1e-6 * (m_end.tv_usec - m_start.tv_usec);
 #else
       m_end = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<double> diff = m_end-m_start;
+      std::chrono::duration<float> diff = m_end-m_start;
       m_elapsed += diff.count();
 #endif
       m_running = false;
     }
   }
   
-  inline double elapsed() const { return m_elapsed; }
+  inline float elapsed() const { return m_elapsed; }
   
 protected:
   
@@ -74,13 +74,13 @@ protected:
   LARGE_INTEGER frequency;
   LARGE_INTEGER startCount;
   LARGE_INTEGER endCount;
-  double m_start, m_end;
+  float m_start, m_end;
 #elif __cplusplus <= 199711L
   struct timeval m_start, m_end;
 #else
   std::chrono::time_point<std::chrono::high_resolution_clock> m_start, m_end;
 #endif
-  double m_elapsed;
+  float m_elapsed;
   bool m_running;
   std::string m_name;
 };

@@ -8,7 +8,7 @@
 #include <Foundation/Foundation.hpp>
 
 void iteration(
-    Values & v, Values & u, double dt, int n[3],
+    Values & v, Values & u, float dt, int n[3],
     int imin, int imax,
     int jmin, int jmax,
     int kmin, int kmax)

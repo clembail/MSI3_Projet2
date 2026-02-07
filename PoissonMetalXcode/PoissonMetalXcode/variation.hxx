@@ -1,11 +1,11 @@
 #include "values.hxx"
 
-void allocVariationData(double *& diff, int n,
-  double *& diffPartial, int nPartial);
+void allocVariationData(float *& diff, int n,
+  float *& diffPartial, int nPartial);
 
-void freeVariationData(double *& diff,
-  double *& diffPartial);
+void freeVariationData(float *& diff,
+  float *& diffPartial);
 
-double variation
+float variation
  (const Values & u, const Values & v,
-  double *& diff, double *&diffPartial, int n);
+  float *& diff, float *&diffPartial, int n);

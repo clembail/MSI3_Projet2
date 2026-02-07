@@ -35,7 +35,7 @@ Values::Values(Parameters & prm) : m_p(prm)
 
   d_u = allocate(nn);
 
-  h_u = new double[nn];
+  h_u = new float[nn];
   h_synchronized = false;
 }
 
@@ -198,7 +198,7 @@ void Values::operator= (const Values &other)
   h_synchronized = other.h_synchronized;
 
   if (other.h_synchronized)
-     memcpy(h_u, other.h_u, nn*sizeof(double));
+     memcpy(h_u, other.h_u, nn*sizeof(float));
 
   copyDeviceToDevice(d_u, other.d_u, nn);
 }

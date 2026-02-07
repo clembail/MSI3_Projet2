@@ -17,10 +17,10 @@ public:
   Scheme(Parameters &P);
   ~Scheme();
 
-  double present();
+  float present();
 
   bool iteration();
-  double variation() { return m_duv; }
+  float variation() { return m_duv; }
 
   const Values & getOutput();
   void setInput(const Values & u);
@@ -28,21 +28,21 @@ public:
   std::string codeName;
 
 protected:
-  double m_t, m_dt;
+  float m_t, m_dt;
   size_t m_n[3];
-  double m_dx[3];
-  double m_xmin[3];
+  float m_dx[3];
+  float m_xmin[3];
 
-  double iteration_domaine(int imin, int imax,
+  float iteration_domaine(int imin, int imax,
                            int jmin, int jmax,
                            int kmin, int kmax);
 
   Parameters &m_P;
   Values m_u, m_v;
-  double m_duv;
+  float m_duv;
 
-  double *d_diff;        // Pointeur pour le tableau de différences (GPU)
-  double *d_diffPartial;
+  float *d_diff;        // Pointeur pour le tableau de différences (GPU)
+  float *d_diffPartial;
 };
 
 #endif /* SCHEME_HXX_ */

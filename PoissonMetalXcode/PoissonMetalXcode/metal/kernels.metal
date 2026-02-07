@@ -13,7 +13,7 @@ kernel void k_iteration(
   uint3 id                      [[thread_position_in_grid]])
 {
   uint i = id.x, j = id.y, k = id.z;
-  int nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
+  uint nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
   if (i == 0 || i >= nx -1 ||
       j == 0 || j >= ny -1 ||
       k == 0 || k >= nz -1){ // bords
@@ -45,12 +45,12 @@ kernel void k_iteration(
 
 
 kernel void k_init(
-  device float* u        [[buffer(0)]],
+  device float* u         [[buffer(0)]],
   constant constants& cst [[buffer(2)]],
   uint3 id                [[thread_position_in_grid]])
 {
   uint i = id.x, j = id.y, k = id.z;
-  int nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
+  uint nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
   int index;
 
   if (i>=nx || j>=ny || k>=nz){
@@ -67,12 +67,12 @@ kernel void k_init(
 
 
 kernel void k_boundaries(
-  device float* u        [[buffer(0)]],
+  device float* u         [[buffer(0)]],
   constant constants& cst [[buffer(2)]],
   uint3 id                [[thread_position_in_grid]])
 {
   uint i = id.x, j = id.y, k = id.z;
-  int nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
+  uint nx = cst.d_n[0], ny = cst.d_n[1], nz = cst.d_n[2];
   int index;
 
   if (i>=nx || j>=ny || k>=nz){
@@ -95,12 +95,12 @@ kernel void k_difference(
   device const float* u [[buffer(0)]],
   device const float* v [[buffer(1)]],
   device float* diff    [[buffer(2)]],
-  constant int* n           [[buffer(3)]],
-  uint id                [[thread_position_in_grid]])
+  constant int* n       [[buffer(3)]],
+  uint id               [[thread_position_in_grid]])
 {
   if (id >= *n) return;
 
-  diff[id] = u[id] - v[id];
+  diff[id] = abs(u[id] - v[id]);
 }
 
 
@@ -109,11 +109,11 @@ kernel void k_difference(
 kernel void k_reduce(
   device const float* input      [[buffer(0)]],
   device float* partialSums      [[buffer(1)]],
-  constant int* n                    [[buffer(2)]],
-  uint gid                        [[thread_position_in_grid]],
-  uint tid                        [[thread_position_in_threadgroup]],
-  uint group_id                   [[threadgroup_position_in_grid]],
-  uint group_size                 [[threads_per_threadgroup]],
+  constant int* n                [[buffer(2)]],
+  uint gid                       [[thread_position_in_grid]],
+  uint tid                       [[thread_position_in_threadgroup]],
+  uint group_id                  [[threadgroup_position_in_grid]],
+  uint group_size                [[threads_per_threadgroup]],
   threadgroup float* sdata       [[threadgroup(0)]]
 )
 {

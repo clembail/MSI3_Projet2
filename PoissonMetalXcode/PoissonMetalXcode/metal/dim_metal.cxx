@@ -17,9 +17,9 @@ static constants _hostConstants;
 // }
 
 void setDims(const int *h_n,
-             const double *h_xmin,
-             const double *h_dx,
-             const double *h_lambda)
+             const float *h_xmin,
+             const float *h_dx,
+             const float *h_lambda)
 {
   // Timer & T = GetTimer(5); T.start();
   for (int i = 0; i < 3; i++){
