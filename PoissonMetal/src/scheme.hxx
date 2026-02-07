@@ -33,13 +33,16 @@ protected:
   double m_dx[3];
   double m_xmin[3];
 
-  double iteration_domaine(int imin, int imax, 
+  double iteration_domaine(int imin, int imax,
                            int jmin, int jmax,
                            int kmin, int kmax);
 
   Parameters &m_P;
   Values m_u, m_v;
   double m_duv;
+
+  double *d_diff;        // Pointeur pour le tableau de différences (GPU)
+  double *d_diffPartial;
 };
 
 #endif /* SCHEME_HXX_ */
