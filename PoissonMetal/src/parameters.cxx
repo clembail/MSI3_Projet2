@@ -22,6 +22,7 @@
 
 #include "timer.hxx"
 #include "version.hxx"
+
 void stime(char * buffer, int size)
 {
   time_t curtime;
@@ -56,8 +57,8 @@ Parameters::Parameters(int argc, char ** argv) : Arguments(argc, argv)
   }
   m_itmax = Get("it", 10);
 
-  double d;
-  double dt_max = 0.1/(m_n[0]*m_n[0]);
+  float d;
+  float dt_max = 0.1/(m_n[0]*m_n[0]);
   d = 0.1/(m_n[1]*m_n[1]);
   if (dt_max > d) dt_max = d;
   d = 0.1/(m_n[2]*m_n[2]);

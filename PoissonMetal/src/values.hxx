@@ -17,10 +17,10 @@ public:
   void zero();
   void boundaries();
 
-  double & operator() (int i,int j,int k) {
+  float & operator() (int i,int j,int k) {
     return h_u[n2*k + n1*j + i];
   }
-  double operator() (int i,int j,int k) const {
+  float operator() (int i,int j,int k) const {
     return h_u[n2*k + n1*j + i];
   }
 
@@ -29,20 +29,20 @@ public:
   int size(int i) const { return m_n[i]; }
   void print(std::ostream &f) const;
 
-  double * dataCPU() { return h_u; }
-  double * dataGPU() { return d_u; }
-  const double * dataCPU() const { return h_u; }
-  const double * dataGPU() const { return d_u; }
+  float * dataCPU() { return h_u; }
+  float * dataGPU() { return d_u; }
+  const float * dataCPU() const { return h_u; }
+  const float * dataGPU() const { return d_u; }
   void synchronized(bool b) { h_synchronized = b; }
 
-  double* get_d_u() { return d_u;}
-  const double* get_d_u() const { return d_u;}
+  float* get_d_u() { return d_u;}
+  const float* get_d_u() const { return d_u;}
 
 private:
 
   Values(const Values &);
   int n1, n2, nn;
-  double * d_u, * h_u;
+  float * d_u, * h_u;
   mutable bool h_synchronized;
 
   Parameters & m_p;
@@ -50,16 +50,16 @@ private:
   int m_imax[3];
   int m_n[3];
 
-  double m_dx[3];
-  double m_xmin[3];
-  double m_xmax[3];
+  float m_dx[3];
+  float m_xmin[3];
+  float m_xmax[3];
 
 };
 
 std::ostream & operator<< (std::ostream & f, const Values & v);
 
-void zero(double *d, int n);
-void init(double *d, int n[3]);
-void boundaries(double *d, int n[3], int imin[3], int imax[3]);
+void zero(float *d, int n);
+void init(float *d, int n[3]);
+void boundaries(float *d, int n[3], int imin[3], int imax[3]);
 
 #endif

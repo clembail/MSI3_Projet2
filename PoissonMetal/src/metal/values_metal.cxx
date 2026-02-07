@@ -143,7 +143,7 @@ void Values::zero()
     return;
   }
 
-  blit -> fillBuffer(bufferTarget, NS::Range::Make(0, nn*sizeof(double)), 0);
+  blit -> fillBuffer(bufferTarget, NS::Range::Make(0, nn*sizeof(float)), 0);
   blit -> endEncoding();
 
   commandBuffer -> commit();

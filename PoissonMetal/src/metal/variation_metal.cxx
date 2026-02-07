@@ -11,9 +11,9 @@
 
 
 void allocVariationData(
-  double *& diff,
+  float *& diff,
   int n,
-  double *& diffPartial,
+  float *& diffPartial,
   int nPartial
 )
 {
@@ -23,8 +23,8 @@ void allocVariationData(
 
 
 void freeVariationData(
-  double *& diff,
-  double *& diffPartial
+  float *& diff,
+  float *& diffPartial
 )
 {
   deallocate(diff);
@@ -32,11 +32,11 @@ void freeVariationData(
 }
 
 
-double variation(
+float variation(
   const Values &u,
   const Values &v,
-  double *&diff,
-  double *&diffPartial,
+  float *&diff,
+  float *&diffPartial,
   int n
 )
 {
@@ -122,7 +122,7 @@ double variation(
     encoder -> setBuffer(bufferDiffPartial, 0, 1);
     encoder->setBytes(&n, sizeof(int), 2);
 
-    encoder -> setThreadgroupMemoryLength(GroupSizeVal*sizeof(double),0);
+    encoder -> setThreadgroupMemoryLength(GroupSizeVal*sizeof(float),0);
 
     MTL::Size groupSize = MTL::Size::Make(GroupSizeVal, 1, 1);
     MTL::Size gridSize = MTL::Size::Make(nbGroups, 1, 1);
@@ -136,11 +136,11 @@ double variation(
 
   // sur CPU
 
-  std::vector<double> h_partial(nbGroups);
+  std::vector<float> h_partial(nbGroups);
   copyDeviceToHost(h_partial.data(), diffPartial, nbGroups);
 
-  double totalSum = 0.0;
-  for (double value : h_partial){
+  float totalSum = 0.0;
+  for (float value : h_partial){
     totalSum += value;
   }
 

@@ -15,15 +15,15 @@ public:
   void info();
 
   int n(int i) const { return m_n[i]; }
-  double dx(int i) const { return m_dx[i]; }
-  double xmin(int i) const { return m_xmin[i]; }
-  double xmax(int i) const { return m_xmax[i]; }
+  float dx(int i) const { return m_dx[i]; }
+  float xmin(int i) const { return m_xmin[i]; }
+  float xmax(int i) const { return m_xmax[i]; }
 
   int imin(int i) const { return m_imin[i]; }
   int imax(int i) const { return m_imax[i]; }
   
   int itmax() const { return m_itmax; }
-  double dt() const { return m_dt; }
+  float dt() const { return m_dt; }
 
   int freq() const { return m_freq; }
   std::string resultPath() const { return m_path; }
@@ -34,11 +34,11 @@ private:
   std::string m_command;
 
   int m_n[3];
-  double m_xmin[3], m_xmax[3], m_dx[3];
+  float m_xmin[3], m_xmax[3], m_dx[3];
   int m_imin[3], m_imax[3];
   
   int m_itmax;
-  double m_dt;
+  float m_dt;
   
   int m_freq;
 

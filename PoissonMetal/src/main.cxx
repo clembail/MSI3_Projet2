@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   std::cerr << "\n  temps init "  << std::setw(12) << std::setprecision(6)
             << T_init.elapsed() << " s\n" << std::endl;
 
-  double T_previous;
+  float T_previous;
 
   for (int it = 0; it < itMax; it++)
   {

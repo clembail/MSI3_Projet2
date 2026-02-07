@@ -19,7 +19,7 @@ Timer & GetTimer(int n)
 
 void PrintTimers(std::ostream &f)
 {
-  double T_total = GetTimer(-1).elapsed();
+  float T_total = GetTimer(-1).elapsed();
 
   f << "\nTemps de calcul:\n\n";
   for (int i=0; i<Timers.size(); i++) {

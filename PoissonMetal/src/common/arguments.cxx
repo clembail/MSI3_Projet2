@@ -55,7 +55,7 @@ unsigned long Arguments::Get(const char * name, unsigned long defaultValue)
 }
 
 template<>
-double Arguments::Get(const char *name, double defaultValue)
+float Arguments::Get(const char *name, float defaultValue)
 {
   std::map<std::string, std::string>::iterator t = _arguments.find(name);
   if (t == _arguments.end())

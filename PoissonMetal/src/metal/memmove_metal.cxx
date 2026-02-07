@@ -8,17 +8,17 @@
 
 static std::map<void*, MTL::Buffer*> _buffers;
 
-double* allocate(int n){
-  size_t size = n*sizeof(double);
+float* allocate(int n){
+  size_t size = n*sizeof(float);
   MTL::Buffer* buffer = Context::instance()
     ->getDevice()
     ->newBuffer(size, MTL::ResourceStorageModeShared);
   void* ptr = buffer->contents();
   _buffers[ptr] = buffer;
-  return static_cast<double*>(ptr);
+  return static_cast<float*>(ptr);
 }
 
-void deallocate(double *&d){
+void deallocate(float *&d){
   void* ptr = static_cast<void*>(d);
 
   if (_buffers.find(ptr) != _buffers.end()){
@@ -42,18 +42,18 @@ MTL::Buffer* getMetalBuffer(void* ptr){
   }
 }
 
-void copyDeviceToHost(double *h, double *d, int n){
-  size_t size = n*sizeof(double);
+void copyDeviceToHost(float *h, float *d, int n){
+  size_t size = n*sizeof(float);
   std::memcpy(h, d, size);
 }
 
-void copyHostToDevice(double *h, double *d, int n){
-  size_t size = n*sizeof(double);
+void copyHostToDevice(float *h, float *d, int n){
+  size_t size = n*sizeof(float);
   std::memcpy(d, h, size);
 }
 
-void copyDeviceToDevice(double *d_out, double *d_in, int n){
-  size_t size = n*sizeof(double);
+void copyDeviceToDevice(float *d_out, float *d_in, int n){
+  size_t size = n*sizeof(float);
   MTL::Buffer* buffer_in = getMetalBuffer((void*)d_in);
   MTL::Buffer* buffer_out = getMetalBuffer((void*)d_out);
   if (!buffer_in || !buffer_out) {

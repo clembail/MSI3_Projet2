@@ -5,8 +5,8 @@
 // void symbol();
 
 void setDims(const int *n,
-             const double *xmin,
-             const double *dx,
-             const double *lambda);
+             const float *xmin,
+             const float *dx,
+             const float *lambda);
 
-// constants& getConstants();
+ constants& getConstants();
