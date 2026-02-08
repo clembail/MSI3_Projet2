@@ -1,90 +1,97 @@
-Voici un résumé fichier par fichier de ce que tu dois implémenter pour réussir ta migration vers Metal, en suivant la structure logique que nous avons définie.
+C'est une excellente approche. Un bon rapport de calcul haute performance (HPC) ne se limite pas à dire "ça va plus vite", mais doit expliquer **pourquoi** et **si le résultat est juste**.
 
-Je divise cela en trois catégories : **L'Infrastructure**, **Le Code GPU** (ce qui remplace `.cu`), et **Le Code Hôte** (C++ qui pilote le GPU).
+Voici un plan structuré pour comparer tes deux versions, avec les métriques précises à relever.
 
----
+### 1. Protocole de Validation (Véracité de la solution)
 
-### 1. L'Infrastructure & Configuration
+Comme nous l'avons vu, la comparaison binaire stricte est impossible à cause de la différence `float` (Metal) vs `double` (Kokkos). Voici comment contourner cela :
 
-#### `src/CMakeLists.txt`
-
-* **Rôle :** Chef d'orchestre de la compilation.
-* **Contenu :**
-* Il ne doit plus chercher CUDA.
-* Il doit inclure le chemin vers le dossier `metal-cpp`.
-* Il doit lier les Frameworks Apple : `Foundation`, `Metal`, `QuartzCore`.
-* **Crucial :** Il doit contenir une commande personnalisée (`add_custom_command`) qui appelle l'outil en ligne de commande `metal` pour compiler tes fichiers `.metal` en un fichier binaire `default.metallib`, et placer ce fichier à côté de ton exécutable.
+* **L'approche Visuelle (Qualitative)** :
+* Configure les deux codes avec les mêmes paramètres : , ,  itérations.
+* Génère les fichiers `.vtr` (VTK) avec `freq=100` (paramètre `--out`).
+* Ouvre les résultats finaux dans **Paraview**.
+* **Action :** Fais une capture d'écran "côte à côte". Les champs de solution (couleurs) doivent être visuellement identiques.
 
 
-
-### 2. Le Code GPU (Fichiers `.metal` et headers associés)
-
-Ces fichiers sont écrits en **MSL (Metal Shading Language)**.
-
-#### `src/metal/kernels.metal`
-
-* **Rôle :** Le cœur du calcul parallèle (contient tous tes kernels).
-* **Contenu :**
-* Inclut `SharedStructs.h` et `User.h`.
-* **Kernel `k_iteration` :** Reçoit les tableaux `u`, `v` et les constantes. Calcule la nouvelle valeur pour chaque point de la grille (l'équivalent de ton `global void iteration` en CUDA).
-* **Kernel `k_init` :** Initialise le tableau avec les conditions de départ.
-* **Kernel `k_boundaries` :** Applique les conditions aux limites sur les bords du domaine.
-* **Kernel `k_reduction` (Variation) :** Effectue la somme locale des différences (première étape de la réduction parallèle). Utilise la mémoire `threadgroup` (équivalent de `__shared__` en CUDA) pour sommer les threads d'un même groupe.
+* **L'approche Globale (La "Variation")** :
+* Ton code calcule une valeur scalaire à chaque itération : la `variation` (norme de la différence entre  et ).
+* **Graphique 1 :** Trace la courbe `Variation = f(itération)` pour Metal et Kokkos sur le même graphe (échelle logarithmique sur Y souvent utile).
+* **Analyse :** Les courbes doivent se superposer presque parfaitement au début. Si elles divergent légèrement vers la fin, explique que c'est dû à l'accumulation des erreurs d'arrondi (`float` vs `double`).
 
 
----
-
-### 3. Le Code Hôte (Implémentation C++ avec metal-cpp)
-
-Ces fichiers gardent les mêmes noms de fonctions que dans les fichiers `.hxx` d'origine, mais changent l'implémentation interne.
-
-#### `src/metal/memmove_metal.cpp` (Implémente `memmove.hxx`)
-
-* **Rôle :** Gestionnaire de mémoire.
-* **Contenu :**
-* `allocate` : Crée un `MTLBuffer` en mode **Shared** (partagé). Stocke le pointeur dans une `std::map` globale pour faire le lien entre "adresse C++" et "Objet Metal". Retourne le pointeur brut (`contents()`).
-* `copy...` : Comme la mémoire est unifiée sur Apple Silicon, ces fonctions ne font plus de copie physique "Device vers Host". Elles servent surtout de barrière de synchronisation (attendre que le GPU ait fini le travail avant que le CPU ne lise).
-
-
-#### `src/metal/iteration_metal.cpp` (Implémente `iteration.hxx`)
-
-* **Rôle :** Lanceur du calcul principal.
-* **Contenu :**
-* Récupère le `CommandBuffer` et le `ComputeCommandEncoder`.
-* Sélectionne le pipeline correspondant au kernel `k_iteration`.
-* Associe les buffers (les tableaux `u` et `v`) aux index attendus par le shader.
-* Envoie la structure des dimensions (via `setBytes` ou un buffer constant).
-* Calcule la taille de la grille (`dispatchThreadgroups`) et lance le calcul.
+* **Le Test "Iso-Précision" (Optionnel mais rigoureux)** :
+* Pour prouver que ton code Metal est juste, compile ta version Kokkos en modifiant `type.hxx` pour utiliser `float` au lieu de `double`.
+* Lance les deux. Si les résultats se rapprochent (ex: identiques jusqu'à la 5ème décimale), tu as prouvé que la logique est bonne et que la différence venait uniquement de la précision.
 
 
 
-#### `src/metal/values_metal.cpp` (Implémente les appels dans `values.cxx`)
+### 2. Protocole de Performance
 
-* **Rôle :** Lanceur des kernels d'initialisation.
-* **Contenu :**
-* Similaire à `iteration_metal.cpp`, mais pour lancer `k_init` (remplir à zéro ou valeur initiale) et `k_boundaries` (gérer les bords).
+C'est ici que tu vas comparer ton Mac (Apple Silicon) contre le GPU NVIDIA de l'école. Il ne faut pas comparer le "Temps Total" (qui inclut l'écriture disque et l'initialisation), mais le **Temps de Calcul Pur**.
 
+**Les métriques à mesurer :**
 
-
-#### `src/metal/variation_metal.cpp` (Implémente `variation.hxx`)
-
-* **Rôle :** Lanceur de la réduction (calcul de l'erreur).
-* **Contenu :**
-* C'est souvent le plus complexe. Il lance le kernel de réduction `k_reduction`.
-* Il récupère le résultat partiel (somme des blocs).
-* Il termine souvent la somme finale sur le CPU (car il reste peu de valeurs à additionner), ou lance une seconde passe GPU si le tableau est immense.
+1. **Temps moyen par itération ()** : Prends le temps de la boucle principale et divise par le nombre d'itérations.
+2. **Débit (Throughput) en MPoints/s** : C'est la métrique reine en HPC.
 
 
 
----
+Cela te permet de comparer l'efficacité indépendamment de la taille de la grille (dans une certaine mesure).
 
-### Résumé des fichiers inchangés (ou presque)
+**Les expériences à mener (Scaling) :**
+Fais varier la taille de la grille () pour voir comment chaque architecture encaisse la charge.
 
-Tu n'as **pas** besoin de toucher à la logique métier de haut niveau :
+| Taille de grille () | Nombre de points total | Kokkos (OpenMP) | Kokkos (Cuda) | Metal (Mac) | Séquentiel (Mac) |
+| --- | --- | --- | --- | --- | --- |
+| 64^3 | ~262 k | ... ms | ... ms | ... ms | ... ms |
+| 128^3 | ~2.1 M  | ... ms | ... ms | ... ms | ... ms |
+| 256^3 | ~16.7 M | ... ms | ... ms | ... ms | ... ms |
+| 512^3 | ~134 M | ... ms | ... ms | ... ms | ... ms |
 
-* `main.cxx`
-* `parameters.cxx`
-* `scheme.cxx`
-* `values.cxx` (Sauf s'il contient des appels CUDA directs, mais normalement il appelle les fonctions définies dans les headers `.hxx`).
+**Graphique 2 :** Trace le **Débit (MPoints/s)** en fonction de la **Taille du problème (Nombre de points)**.
 
-Cette séparation te permet de garder ton projet propre : le `main` ne sait même pas qu'il tourne sur du Metal, il appelle juste des fonctions standard.
+**Ce que tu vas probablement observer (Analyse à mettre dans le rapport) :**
+
+* **Petites grilles () :** Le GPU NVIDIA risque d'être lent (latence de lancement des kernels CUDA). Le CPU (OpenMP) ou Metal (mémoire unifiée) pourraient être devant.
+* **Grandes grilles () :** C'est là que les GPU brillent.
+* Le GPU NVIDIA de l'école devrait avoir une puissance brute énorme.
+* L'architecture Apple Silicon a une **bande passante mémoire** phénoménale (jusqu'à 400 GB/s sur les puces Pro/Max). Comme ton code est "Memory Bound" (il fait peu de calculs par octet lu : juste une addition et une multiplication), le Mac pourrait surprendre et être très compétitif face à une carte NVIDIA plus ancienne ou milieu de gamme.
+
+
+
+### 3. Comparaison de l'Implémentation (Qualité du Code)
+
+N'oublie pas cette partie "Génie Logiciel". Compare l'effort de développement.
+
+* **Kokkos :**
+* *Avantage :* Un seul code source (`.cxx`) fonctionne sur CPU et GPU. Abstraction puissante.
+* *Inconvénient :* Compilation complexe, dépendance lourde, syntaxe parfois verbeuse (`Kokkos::View`, `parallel_for`).
+
+
+* **Metal :**
+* *Avantage :* Contrôle total, pas de librairie tierce (natif macOS), debugging facile avec Xcode.
+* *Inconvénient :* Code très verbeux (il faut 5 fichiers `.cxx/.hxx/.metal` pour faire ce que Kokkos fait en 1), gestion manuelle de la mémoire et des pipelines, non portable (ne marche que sur Apple).
+
+
+
+### Résumé de ton plan de rapport :
+
+1. **Introduction :** Présentation du problème physique et des deux machines (CPU/GPU, RAM).
+2. **Validation :**
+* Comparaison visuelle (Paraview).
+* Analyse de la courbe de variation (explication de l'écart `float`/`double`).
+
+
+3. **Performance :**
+* Tableau des temps de calcul.
+* Graphique de débit (MPoints/s).
+* Discussion sur la bande passante mémoire (le facteur limitant probable).
+
+
+4. **Critique des Modèles :**
+* Kokkos (Portabilité) vs Metal (Performance native/Spécificité).
+* Difficultés rencontrées lors du portage (ex: la gestion de la réduction qui est automatique en Kokkos mais manuelle en Metal).
+
+
+
+C'est un plan solide qui couvre tous les aspects attendus d'un projet de calcul parallèle !
