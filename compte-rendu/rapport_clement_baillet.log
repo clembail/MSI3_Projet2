@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.9.16)  9 FEB 2026 00:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.9.16)  9 FEB 2026 00:40
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**rapport.tex
-(./rapport.tex
+**rapport_clement_baillet.tex
+(./rapport_clement_baillet.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 (/usr/local/texlive/2025/texmf-dist/tex/latex/base/article.cls
@@ -519,8 +519,8 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \@floatcapt=\box82
 )
 \c@definition=\count337
- (./rapport.aux)
-\openout1 = `rapport.aux'.
+ (./rapport_clement_baillet.aux)
+\openout1 = `rapport_clement_baillet.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
 LaTeX Font Info:    ... okay on input line 53.
@@ -628,7 +628,7 @@ Package pdftex.def Info: plot_erreur_kokkos.png  used on input line 102.
 
 [3 <./plot_erreur_metal.png> <./plot_erreur_kokkos.png>]
 
-[4] (./rapport.aux)
+[4] (./rapport_clement_baillet.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
@@ -636,14 +636,14 @@ L3 programming layer <2025-01-18>
  ) 
 Here is how much of TeX's memory you used:
  24870 strings out of 473190
- 563807 string characters out of 5715800
- 969151 words of memory out of 5000000
+ 563999 string characters out of 5715800
+ 969199 words of memory out of 5000000
  47744 multiletter control sequences out of 15000+600000
  567541 words of font info for 70 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 116i,9n,121p,1120b,497s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 116i,9n,121p,1136b,497s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb>
-Output written on rapport.pdf (4 pages, 462275 bytes).
+Output written on rapport_clement_baillet.pdf (4 pages, 462275 bytes).
 PDF statistics:
  124 PDF objects out of 1000 (max. 8388607)
  63 compressed objects within 1 object stream
