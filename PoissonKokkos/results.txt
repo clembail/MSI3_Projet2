@@ -1,0 +1,72 @@
+./install/gnu/serial/release/float/PoissonKokkos_serial
+Internal domain :   [0.0025, 0.9975] x [0.0025, 0.9975] x [0.0025, 0.9975]
+Point indices   :   [1 ... 399] x [1 ... 399] x [1 ... 399]
+
+It. max :  10
+Dt :       6.21887e-07
+
+
+  temps init     0.858386 s
+
+iteration     0  variation      59865.2  temps calcul    5.10196 s
+iteration     1  variation        34051  temps calcul     5.1248 s
+iteration     2  variation      25356.8  temps calcul    5.10997 s
+iteration     3  variation      20609.7  temps calcul     5.1263 s
+iteration     4  variation      17739.7  temps calcul    5.10894 s
+iteration     5  variation      15798.3  temps calcul    5.11758 s
+iteration     6  variation      14387.8  temps calcul    5.11097 s
+iteration     7  variation      13298.9  temps calcul    5.11519 s
+iteration     8  variation      12438.7  temps calcul    5.10527 s
+iteration     9  variation      11721.4  temps calcul    5.12367 s
+
+             temps total     52.0037 s
+
+--------------------------------------------------------------------------
+
+./install/gnu/serial/release/float/PoissonKokkos_openmp -threads 6
+Internal domain :   [0.0025, 0.9975] x [0.0025, 0.9975] x [0.0025, 0.9975]
+Point indices   :   [1 ... 399] x [1 ... 399] x [1 ... 399]
+
+It. max :  10
+Dt :       6.21887e-07
+
+
+  temps init     0.587559 s
+
+iteration     0  variation      60019.3  temps calcul   0.739565 s
+iteration     1  variation      34087.7  temps calcul   0.716681 s
+iteration     2  variation        25290  temps calcul   0.714173 s
+iteration     3  variation        20612  temps calcul   0.659045 s
+iteration     4  variation      17760.3  temps calcul    0.69541 s
+iteration     5  variation      15826.2  temps calcul   0.768553 s
+iteration     6  variation      14414.4  temps calcul   0.714763 s
+iteration     7  variation      13329.6  temps calcul   0.683713 s
+iteration     8  variation        12463  temps calcul   0.783787 s
+iteration     9  variation      11750.2  temps calcul   0.732663 s
+
+             temps total     7.79886 s
+
+--------------------------------------------------------------------------
+
+./install/gnu/cuda/release/float/PoissonKokkos_cuda
+Internal domain :   [0.0025, 0.9975] x [0.0025, 0.9975] x [0.0025, 0.9975]
+Point indices   :   [1 ... 399] x [1 ... 399] x [1 ... 399]
+
+It. max :  10
+Dt :       6.21887e-07
+
+
+  temps init    0.0191451 s
+
+iteration     0  variation      60014.4  temps calcul  0.0571548 s
+iteration     1  variation      34085.6  temps calcul  0.0558737 s
+iteration     2  variation      25298.1  temps calcul  0.0516306 s
+iteration     3  variation      20613.6  temps calcul  0.0511144 s
+iteration     4  variation        17766  temps calcul  0.0513528 s
+iteration     5  variation      15830.7  temps calcul  0.0473489 s
+iteration     6  variation      14419.1  temps calcul  0.0470353 s
+iteration     7  variation      13334.4  temps calcul  0.0471756 s
+iteration     8  variation      12468.1  temps calcul  0.0452003 s
+iteration     9  variation      11755.3  temps calcul  0.0423051 s
+
+             temps total    0.681598 s
