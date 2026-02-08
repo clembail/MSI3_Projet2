@@ -1,13 +1,9 @@
 #pragma once
 
-// SI ON EST DANS LE COMPILATEUR METAL
 #ifdef __METAL_VERSION__
   #include <metal_stdlib>
   using namespace metal;
-  // Les fonctions 'inline' en C++ doivent être 'inline' en Metal aussi, c'est compatible.
-  // Mais attention aux fonctions mathématiques (abs, sin...) qui doivent venir de metal_stdlib.
 #else
-  // SI ON EST EN C++ (CPU)
   #include <cmath>
   #include <algorithm>
   using namespace std;

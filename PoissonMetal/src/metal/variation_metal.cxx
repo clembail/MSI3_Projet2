@@ -1,12 +1,11 @@
 #include "dim.hxx"
 #include "variation.hxx"
 #include "values.hxx"
-#include "memmove.hxx" // Pour allocate/deallocate/copy
+#include "memmove.hxx"
 #include "Context.hxx"
 #include <Metal/Metal.hpp>
 #include <iostream>
 #include <vector>
-#include <cmath> // pour ceil
 #include "SharedStructs.h"
 
 

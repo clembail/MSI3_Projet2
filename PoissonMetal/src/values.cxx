@@ -30,8 +30,8 @@ Values::Values(Parameters & prm) : m_p(prm)
     nn *= m_n[i];
   }
 
-  n1 = m_n[0];      // nombre de points dans la premiere direction
-  n2 = m_n[1] * n1; // nombre de points dans le plan des 2 premieres directions
+  n1 = m_n[0];
+  n2 = m_n[1] * n1;
 
   d_u = allocate(nn);
 
@@ -102,13 +102,9 @@ void Values::swap(Values & other)
 
 void Values::plot(int order) const {
 
-  // --- MODIFICATION ---
-    // On force la mise à jour CPU depuis le GPU, quel que soit l'état du flag.
-    // if (!h_synchronized) {  <-- On commente ou supprime la condition
-      copyDeviceToHost(h_u, d_u, nn);
-      h_synchronized = true;
-    // }
-    // --------------------
+    copyDeviceToHost(h_u, d_u, nn);
+    h_synchronized = true;
+
   std::ostringstream s;
   int i, j, k;
   int imin = m_imin[0]-1, jmin = m_imin[1]-1, kmin = m_imin[2]-1;
