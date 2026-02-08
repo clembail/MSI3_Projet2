@@ -4,9 +4,6 @@
 #include "values.hxx"
 
 void iteration(
-    Values & v, Values & u, float dt, int n[3],
-    int imin, int imax, 
-    int jmin, int jmax,
-    int kmin, int kmax);
+    Values & v, Values & u, float dt, int n[3], float m_t);
 
 #endif

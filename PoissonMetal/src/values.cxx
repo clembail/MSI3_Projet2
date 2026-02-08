@@ -46,24 +46,6 @@ Values::~Values()
   deallocate(d_u);
 }
 
-// void Values::zero()
-// {
-//   ::zero(d_u, nn);
-//   h_synchronized = false;
-// }
-
-// void Values::init()
-// {
-//   ::init(d_u, m_n);
-//   h_synchronized = false;
-// }
-
-// void Values::boundaries()
-// {
-//   ::boundaries(d_u, m_n, m_imin, m_imax);
-//   h_synchronized = false;
-// }
-
 std::ostream & operator<< (std::ostream & f, const Values & v)
 {
   v.print(f);
@@ -120,11 +102,13 @@ void Values::swap(Values & other)
 
 void Values::plot(int order) const {
 
-  if (!h_synchronized) {
-    copyDeviceToHost(h_u, d_u, nn);
-    h_synchronized = true;
-  }
-
+  // --- MODIFICATION ---
+    // On force la mise à jour CPU depuis le GPU, quel que soit l'état du flag.
+    // if (!h_synchronized) {  <-- On commente ou supprime la condition
+      copyDeviceToHost(h_u, d_u, nn);
+      h_synchronized = true;
+    // }
+    // --------------------
   std::ostringstream s;
   int i, j, k;
   int imin = m_imin[0]-1, jmin = m_imin[1]-1, kmin = m_imin[2]-1;
