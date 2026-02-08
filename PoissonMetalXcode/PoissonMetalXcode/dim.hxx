@@ -2,8 +2,6 @@
 
 #include "metal/SharedStructs.h"
 
-// void symbol();
-
 void setDims(const int *n,
              const float *xmin,
              const float *dx,

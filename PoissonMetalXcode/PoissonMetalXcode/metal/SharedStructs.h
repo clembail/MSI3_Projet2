@@ -18,4 +18,4 @@ struct constants {
 MTL::Buffer* getMetalBuffer(void* ptr);
 
 
-#endif  // __METAL_VERSION__
+#endif
