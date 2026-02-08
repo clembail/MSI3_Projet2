@@ -1,0 +1,143 @@
+% !TEX spellcheck = French
+\documentclass{article}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{derivative}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{listingsutf8}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+\usepackage{subcaption}
+\usepackage{float}
+
+
+\newcommand{\N}{\mathbb N}
+\newcommand{\Z}{\mathbb Z}
+\renewcommand{\P}{\mathbb P}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\R}{\mathbb R}
+\newcommand{\C}{\mathbb C}
+\newcommand{\F}{\mathbb F}
+
+\newcommand{\dint}{\displaystyle\int}
+
+\newcommand{\bleu}{\color{blue}}
+\newcommand{\cyan}{\color{cyan}}
+\newcommand{\citron}{\color{lime}}
+\newcommand{\rouge}{\color{red}}
+\newcommand{\magenta}{\color{magenta}}
+\newcommand{\olive}{\color{olive}}
+\newcommand{\violet}{\color{violet}}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{lemma}[definition]{Lemma}
+
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{Remark}
+
+\theoremstyle{plain}
+\newtheorem{example}[definition]{Example}
+
+\title{MSI3 PROJET 2: PROGRAMMATION SUR GPU}
+\author{Clément Baillet}
+\date{}
+
+\begin{document}
+\emergencystretch 3em
+\maketitle
+
+Le projet précédent nous avait permis d’adapter un code de résolution d’un problème de Poisson en y ajoutant une composante hybride MPI/OpenMP, afin d’exploiter au mieux les différents cœurs et threads disponibles sur un processeur. Toutefois, bien que les CPU aient gagné en parallélisme ces dernières années, ils restent moins performants sur cet aspect précis que les cartes graphiques. En effet, les GPU ont été conçus initialement pour effectuer du calcul parallèle, par exemple du calcul matriciel pour l’affichage graphique. Il est donc naturel de vouloir utiliser ces dispositifs pour du calcul scientifique.
+
+Initialement, le projet 2 consistait en l’implémentation du code Poisson en CUDA, pour l’exécuter sur carte graphique Nvidia. Toutefois, disposant d’un appareil Apple muni d’une puce Apple Silicon M4 (avec 24 Go de mémoire unifiée entre CPU et GPU), j’ai jugé intéressant de proposer une implémentation utilisant l’API Metal combinée à la librairie \texttt{metal-cpp}, afin de conserver un code en \texttt{C++}. J’ai également rédigé une version utilisant Kokkos, une API générique qui permet de cibler au choix OpenMP, CUDA ou HIP (API utilisée par AMD pour le calcul sur GPU). Pour tester ce code, je me suis servi de la machine Rhum fournie par l’ENSTA, qui possède un GPU Nvidia (une Tesla K80, avec 2×12 Go de VRAM). La Figure~\ref{fig:sequentiel} montre une section de la solution séquentielle de référence, visualisée avec le logiciel ParaView.
+
+\begin{figure}[H]
+  \begin{center}
+    \includegraphics[width=0.75\textwidth]{plot\_seq.png}
+  \end{center}
+  \caption{Section du cube dans lequel on résout le problème de Poisson}\label{fig:sequentiel}
+\end{figure}
+
+
+\section{Version Metal}
+
+
+L’implémentation Metal du projet s’appuie sur le squelette fourni pour la version CUDA, que j’ai cherché à respecter autant que possible. J’ai notamment créé un dossier \texttt{metal} regroupant les fichiers dédiés aux appels à l’API Metal.
+
+L’architecture adoptée repose sur une séparation nette entre, d’une part, la logique de gestion du matériel et, d’autre part, les noyaux de calcul. Au cœur de ce dispositif se trouve la classe \texttt{Context}, définie dans les fichiers \texttt{Context.cxx} et \texttt{Context.hxx}, qui joue un rôle central. Implémentée sous la forme d’un Singleton, elle est responsable de l’initialisation unique du \texttt{MTLDevice}, interface logicielle vers le GPU, ainsi que de la création de la \texttt{CommandQueue}, la file d’attente par laquelle transitent toutes les instructions de calcul. Cette centralisation permet d’éviter les coûts de réinitialisation du périphérique à chaque itération de la boucle de temps.
+
+La communication des données entre le processeur principal (CPU) et la carte graphique (GPU) est assurée par des structures communes alignées, définies dans le fichier \texttt{SharedStructs.h}. Ce fichier est inclus à la fois par le code C++ et par le code Metal, ce qui garantit une interprétation cohérente des paramètres de simulation (dimensions de la grille, pas de temps, etc.) des deux côtés de la mémoire. Les fonctions de calcul, écrites en Metal Shading Language (MSL), sont regroupées dans le fichier \texttt{kernels.metal}. On y trouve par exemple les noyaux \texttt{k\_iteration}, \texttt{k\_init} et \texttt{k\_boundaries}, qui définissent les opérations mathématiques exécutées en parallèle par chaque thread sur le GPU.
+
+L’envoi des instructions au GPU suit un enchaînement précis, principalement orchestré par des fichiers C++ comme \texttt{iteration\_metal.cxx}. Lorsqu’une étape de calcul est demandée, le programme charge la bibliothèque de fonctions Metal compilées et crée un \textit{Pipeline State Object} (PSO), qui fixe la configuration du GPU pour la tâche considérée. Un \textit{Compute Command Encoder} est ensuite instancié pour enregistrer la suite de commandes. Le programme associe alors les buffers contenant les champs de température aux index attendus par le shader, configure les constantes via la structure partagée, puis définit la topologie de la grille de calcul. Cette dernière étape consiste à spécifier la taille des groupes de threads (\textit{threadgroups}) ainsi que le nombre de groupes nécessaires pour couvrir l’ensemble du domaine spatial. Une fois l’encodage terminé, le \textit{Command Buffer} est soumis à la file d’attente du contexte, déclenchant une exécution massivement parallèle et asynchrone sur le processeur graphique.
+
+\section{Version Kokkos}
+
+L’implémentation basée sur la librairie Kokkos vise avant tout la portabilité des performances, en permettant d’exécuter le même code source sur différentes architectures matérielles sans modifications majeures. La configuration de l’environnement d’exécution est centralisée dans le fichier \texttt{paramKokkos.hxx}. Ce dernier définit les espaces de mémoire et d’exécution, en adaptant automatiquement les types \texttt{MemSpace} et \texttt{ExecSpace} selon que la compilation active ou non le support CUDA via des directives du préprocesseur. C’est également dans ce fichier que sont définies les politiques d’exécution, telles que \texttt{range\_policy}, qui déterminent la manière dont les itérations de boucle sont réparties sur les ressources matérielles disponibles.
+
+La définition physique du problème, incluant les conditions initiales et les termes sources, se trouve dans le fichier \texttt{user.hxx}. Les fonctions mathématiques y sont précédées de la macro \texttt{KOKKOS\_INLINE\_FUNCTION}, ce qui indique au compilateur de générer du code exécutable aussi bien pour l’hôte que pour le périphérique accélérateur. Cette approche permet de conserver une base de code scientifique unique, indépendante des particularités du jeu d’instructions de l’architecture ciblée.
+
+Contrairement à une approche GPU native explicite, l’envoi des instructions de calcul au GPU est ici entièrement pris en charge par le modèle de programmation de Kokkos. Le code utilise des foncteurs ou des lambdas C++ standards, qui sont ensuite distribués sur les unités de calcul via des primitives de parallélisme telles que \texttt{Kokkos::parallel\_for}. La librairie se charge de traduire ces appels en lancements de noyaux CUDA ou en threads OpenMP selon la configuration choisie, et calcule automatiquement la taille des grilles et des blocs afin de maximiser l’occupation du matériel. De même, la gestion des données repose sur les conteneurs \texttt{Kokkos::View}, qui abstraient l’allocation mémoire et garantissent un agencement des données (par exemple \textit{LayoutLeft} ou \textit{LayoutRight}) adapté à l’architecture sous-jacente.
+
+\section{Résultats}
+
+Avant de présenter les résultats, par souci d'honnêteté intellectuelle, il est bon de préciser que les tests Séquentiels/Metal et Kokkos OpenMP/Cuda n'ayant pas été effectués sur la même machine, il est difficile d'en tirer des conclusions définitives. En effet, les composants de la machine Rhum ont plus de 10 ans, et ne sont donc pas nécessairement au niveau d'une puce datant de 2025 (bien que le GPU Tesla K80 soit tout de même très performant, et surpassant même sur certains points la partie graphique de la puce M4 avec quasiment 5000 coeurs Cuda contre un peu moins de 1300 ALU pour le SoC d'Apple).
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plot\_erreur\_metal.png}
+    \caption{Version Metal}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plot\_erreur\_kokkos.png}
+    \caption{Version Kokkos}
+  \end{subfigure}
+  \caption{Erreur commise avec les codes Metal et Kokkos par rapport au code séquentiel}
+  \label{fig:comparaisonVersions}
+\end{figure}
+
+On commence par vérifier que les résultats que l'on a obtenu avec chacune des deux versions est correct par rapport au code séquentiel. Pour ce faire, j'ai utilisé le logiciel Paraview qui permet de visualiser les fichiers .vtk produits par les différents codes. Il permet notamment de pouvoir faire la différence entre deux fichiers afin de directement observer l'erreur commise. On fournit la comparaison Séquentiel/Metal ainsi que Séquentiel/Kokkos dans la Figure \ref{fig:comparaisonVersions}. À noter que comme l'architecture de la partie graphique de la puce M4 ne permet pas nativement de faire des calculs avec des flottants double précision, j'ai ici comparé uniquement les codes en simple précision. On remarque sur les figures une légère erreur sur le contour de la sphère, de l'ordre de \(10^{-6}/10^{-7}\), ce qui est cohérent avec l'utilisation de float à la place de double. On peut donc être satisfait de la qualité des résultats obtenus pour les versions Metal et Kokkos.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \textbf{Taille de grille} & \textbf{Séquentiel} & \textbf{Metal} & \textbf{Kokkos OMP(Rhum)} & \textbf{Kokkos Cuda(Rhum)} \\
+    \hline
+    \(64^3\) & 0.14\,s & 0.1\,s & 0.11\,s & 0.17\,s \\
+    \(128^3\) & 0.66\,s & 0.12\,s& 0.80\,s& 0.22\,s\\
+    \(256^3\) & 5.3\,s & 0.39\,s & 5.2\,s & 0.80\,s \\
+    \(512^3\) & 43\,s & 2.3\,s & 74\,s & 4.4\,s \\
+    \hline
+  \end{tabular}
+  \caption{Benchmark des différentes versions du solveur Poisson pour différentes tailles de grille}
+  \label{tab:benchmark}
+\end{table}
+
+
+Passons maintenant aux performances : on fournit le tableau \ref{tab:benchmark} qui regroupe les temps totaux d'exécution pour toutes les versions, pour différentes tailles de maillage. Comme précisé au début de la section, comme nous avons effectué les tests sur des machines différentes, nous allons surtout nous concentrer sur les comparaisons Séquentiel/Metal et Kokkos OpenMP/Cuda:
+\begin{itemize}
+  \item Dès les plus petites tailles de grilles, on observe un net avantage pour la version Metal du solveur, avantage qui ne fait que s'accroître à mesure que la grille grandit (pour une grille \(512^3\), le code Metal est environ 20x plus rapide que le code séquentiel).
+  \item Pour la comparaison entre Kokkos OpenMP et Cuda, le résultat est sans appel : Cuda surpasse largement OpenMP, et ce malgré les écritures de données à faire entre le CPU et le GPU.
+  \item À noter que les performances entre Kokkos Cuda et Metal restent tout de même assez proches malgré l'âge qui sépare les deux architectures, avec tout de même un avantage pour Metal qui bénéficie de la mémoire partagée entre le CPU et le GPU, et qui lui permet en particulier d'avoir autant de mémoire vidéo que sur la Tesla K80.
+
+
+\end{itemize}
+
+\section*{Conclusion}
+Ce projet m’a permis d’explorer concrètement la programmation sur GPU à travers deux approches complémentaires : une implémentation spécifique à l’écosystème Apple via Metal, et une implémentation portable grâce à Kokkos. Les deux versions reproduisent correctement la solution de référence, avec une erreur relative de l’ordre de \(10^{-6}/10^{-7}\) en simple précision, ce qui confirme la validité numérique des adaptations réalisées.
+
+Sur le plan des performances, les tests montrent un gain très significatif par rapport à la version séquentielle, en particulier pour la version Metal, qui profite de la mémoire unifiée de la puce Apple Silicon M4. Du côté de Kokkos, la comparaison entre l’exécution OpenMP et CUDA met clairement en évidence l’intérêt du GPU pour ce type de problème, malgré le surcoût potentiel des transferts de données.
+
+Au-delà des chiffres, ce travail illustre l’importance de structurer le code pour séparer la logique scientifique de la gestion du matériel, que ce soit via une API bas niveau comme Metal ou via un modèle de programmation abstrait comme Kokkos. Cette séparation facilite la portabilité, la maintenance et l’évolution du code vers de nouvelles architectures. À plus long terme, ce type d’approche ouvre la voie à des solveurs plus complexes, capables de tirer parti efficacement des accélérateurs disponibles sur des plateformes hétérogènes.
+\end{document}
